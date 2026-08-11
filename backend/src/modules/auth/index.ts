@@ -54,6 +54,10 @@ export function createAuthModule({
       service.authenticateAccessToken(accessToken),
     requireAuth,
     requireAdmin: createRequireRole('admin'),
+    requireModerator: createRequireRole(['admin', 'moderator']),
+    requireVendor: createRequireRole('vendor'),
+    requireBroker: createRequireRole('broker'),
+    requireBuyer: createRequireRole('buyer'),
     routes: createAuthRoutes({ env, requireAuth, service }),
   }
 }

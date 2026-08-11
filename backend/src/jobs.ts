@@ -105,6 +105,60 @@ export const backgroundJobs = {
     // this deployment has no handler for.
     console.log('Job outbox:drain completed.', metrics)
   },
+  /**
+   * Daily scan for active vendor subscriptions expiring within 7 days. Enqueues
+   * a `subscriptions:expiring` outbox task per vendor so the (currently stub)
+   * handler can send a reminder when an email template is wired. Idempotent via
+   * the outbox dedupe key: a re-run on the same day overwrites, not duplicates.
+   */
+  'subscriptions:scan-expiring': async ({ prisma }, now) => {
+    const soon = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const expiring = await prisma.vendorSubscription.findMany({
+      where: {
+        status: 'active',
+        periodEnd: { lte: soon, gt: now },
+      },
+      select: { id: true, vendorId: true, periodEnd: true },
+      take: 500,
+    })
+    const { enqueueTask } = await import('./outbox')
+    const dayTag = now.toISOString().slice(0, 10)
+    let enqueued = 0
+    for (const sub of expiring) {
+      await enqueueTask(prisma, {
+        type: 'subscriptions:expiring',
+        // Dedupe per subscription per day: a same-day re-run replaces, not duplicates.
+        dedupeKey: `subscriptions:expiring:${sub.id}:${dayTag}`,
+        payload: { subscriptionId: sub.id, vendorId: sub.vendorId, periodEnd: sub.periodEnd.toISOString() },
+      })
+      enqueued += 1
+    }
+    console.log(`Job subscriptions:scan-expiring enqueued ${enqueued} reminders.`)
+  },
+  /**
+   * Daily sweep that downgrades vendors whose verification has expired. Moves
+   * verificationTier back to `none` and verified to false so the catalog stops
+   * showing the badge for lapsed verifications.
+   */
+  'verification:expire-sweep': async ({ prisma }, now) => {
+    const expired = await prisma.verificationRequest.findMany({
+      where: { status: 'approved', expiresAt: { lt: now } },
+      select: { id: true, vendorId: true },
+      take: 500,
+    })
+    if (expired.length === 0) {
+      console.log('Job verification:expire-sweep found no expired verifications.')
+      return
+    }
+    const vendorIds = [...new Set(expired.map((r) => r.vendorId))]
+    await prisma.vendor.updateMany({
+      where: { id: { in: vendorIds } },
+      data: { verificationTier: 'none', verified: false },
+    })
+    console.log(
+      `Job verification:expire-sweep downgraded ${vendorIds.length} vendors with expired verification.`,
+    )
+  },
 } satisfies Record<string, BackgroundJob>
 
 export type BackgroundJobName = keyof typeof backgroundJobs

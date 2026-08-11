@@ -33,6 +33,11 @@ export const schedules: ScheduleEntry[] = [
   // would expire mid-pass and let another instance in.
   { expression: '* * * * *', job: 'outbox:drain' },
   // { expression: '0 3 * * *', job: 'auth:sessions:cleanup' },
+  // Monetization upkeep: remind vendors of soon-to-expire subscriptions, and
+  // downgrade verifications whose validity has lapsed. Daily at 03:00 UTC, off
+  // the busier hours of the day.
+  { expression: '0 3 * * *', job: 'subscriptions:scan-expiring' },
+  { expression: '30 3 * * *', job: 'verification:expire-sweep' },
 ]
 
 export type ScheduledJob = { entry: ScheduleEntry; cron: Cron }

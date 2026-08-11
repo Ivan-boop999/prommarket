@@ -21,6 +21,9 @@ model User {
   vendor              Vendor?
   buyer               Buyer?
   dealsAsBroker       Deal[]               @relation("DealBroker")
+  brokerFees          BrokerFeeLedger[]
+  verificationReviews VerificationRequest[] @relation("VerificationReviewer")
+  paymentConfirmations Invoice[]           @relation("InvoiceConfirmer")
 
   @@index([role], map: "users_role_idx")
   @@map("users")
@@ -258,6 +261,10 @@ model Product {
   status        ProductStatus       @default(new)
   availability  ProductAvailability @default(in_stock)
   /// Human-readable lead time, e.g. "2-3 недели".
+  /// Denormalized: latest active featured placement end. Maintained by the billing module
+  /// when an invoice for a featured placement is confirmed, so the catalog query can filter
+  /// and boost featured products without joining featured_placements.
+  featuredUntil DateTime?           @map("featured_until")
   leadTime      String?             @map("lead_time")
   conditionNote String?             @map("condition_note")
   categoryId    String              @map("category_id") @db.Uuid
@@ -269,6 +276,7 @@ model Product {
   attributes    ProductAttribute[]
   prices        ProductPrice[]
   deals         Deal[]
+  featuredPlacements FeaturedPlacement[]
   createdAt     DateTime            @default(now()) @map("created_at")
   updatedAt     DateTime            @updatedAt @map("updated_at")
 
@@ -368,7 +376,12 @@ model Vendor {
   ogrn         String?
   description  String?
   logo         String?
+  /// Denormalized: true when verificationTier != none. Kept for cheap catalog filtering;
+  /// the source of truth is the latest approved VerificationRequest.
   verified     Boolean   @default(false)
+  /// Verification tier granted by an approved VerificationRequest. Drives the badge variant
+  /// shown in the catalog and the "verified supplier" filter.
+  verificationTier VerificationTier @default(none) @map("verification_tier")
   rating       Decimal   @default(0) @db.Decimal(3, 2)
   totalDeals   Int       @default(0) @map("total_deals")
   contactName  String?   @map("contact_name")
@@ -379,11 +392,26 @@ model Vendor {
   city         String?
   products     Product[]
   deals        Deal[]
+  subscriptions VendorSubscription[]
+  leadCreditLedger LeadCreditLedger[]
+  verificationRequests VerificationRequest[]
+  addOns       VendorAddOn[]
+  featuredPlacements FeaturedPlacement[]
+  invoices     Invoice[]
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
   @@index([verified], map: "vendors_verified_idx")
+  @@index([verificationTier], map: "vendors_verification_tier_idx")
   @@map("vendors")
+}
+
+enum VerificationTier {
+  none
+  basic
+  pro
+
+  @@map("verification_tier")
 }
 
 // --- BUYERS ---
@@ -438,6 +466,8 @@ model Deal {
   broker          User?         @relation("DealBroker", fields: [brokerId], references: [id], map: "deals_broker_id_fkey")
   messages        DealMessage[]
   history         DealHistory[]
+  brokerFees      BrokerFeeLedger[]
+  invoices        Invoice[]
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
@@ -516,4 +546,423 @@ model DealNumberSequence {
   next Int @default(1)
 
   @@map("deal_number_sequence")
+}
+
+// =============================================================================
+// MONETIZATION (ПромМаркет)
+//
+// Six offline-billed monetization models. No online card payments: vendors pay
+// by bank transfer against an issued Invoice, and an admin manually confirms
+// receipt. Money crosses the wire as Decimal strings (decimalStringSchema in
+// contracts) and every amount lives as @db.Decimal to stay exact.
+//
+//   1. Subscriptions     — SubscriptionPlan + VendorSubscription
+//   2. Lead credits      — LeadCreditLedger (append-only; balance = SUM(delta))
+//   3. Featured listings — FeaturedPlacement + Product.featuredUntil
+//   4. Verification      — VerificationRequest + VerificationDocument (+ Vendor tier)
+//   5. Broker success-fee— BrokerFeeLedger (accrued on deal completion)
+//   6. SaaS add-ons      — VendorAddOn
+//
+// Invoices are the shared settlement surface for 1, 2, 3, 5, 6. One invoice
+// confirmation endpoint fans out side-effects based on invoice.type.
+// =============================================================================
+
+// --- INVOICES (shared settlement surface) ---
+
+/// A payable document issued to a vendor or broker. status moves
+/// draft → issued → paid (or overdue / cancelled). Confirmation is manual
+/// (an admin records receipt after a bank transfer), never automated from a
+/// payment provider, because the platform does not process cards.
+model Invoice {
+  id               String        @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// Human-readable, e.g. INV-2026-0001. Atomically allocated by InvoiceNumberSequence.
+  number           String        @unique(map: "invoices_number_key")
+  type             InvoiceType
+  /// Who owes the money. payerUserId is always set; vendorId is set when the payer
+  /// is a vendor so the invoice can be listed from the vendor cabinet.
+  payerType        InvoicePayerType
+  payerUserId      String        @map("payer_user_id") @db.Uuid
+  vendorId         String?       @map("vendor_id") @db.Uuid
+  subscriptionId   String?       @map("subscription_id") @db.Uuid
+  dealId           String?       @map("deal_id") @db.Uuid
+  amount           Decimal       @db.Decimal(16, 2)
+  currency         String        @default("RUB")
+  status           InvoiceStatus @default(draft)
+  dueDate          DateTime?     @map("due_date")
+  issuedAt         DateTime?     @map("issued_at")
+  paidAt           DateTime?     @map("paid_at")
+  /// Free-text reference the payer supplies (payment order number, date, bank).
+  paymentReference String?       @map("payment_reference")
+  /// Admin who confirmed receipt.
+  confirmedBy      String?       @map("confirmed_by") @db.Uuid
+  confirmer        User?         @relation("InvoiceConfirmer", fields: [confirmedBy], references: [id], map: "invoices_confirmed_by_fkey")
+  confirmedAt      DateTime?     @map("confirmed_at")
+  notes            String?
+  /// Line items as a JSON array of { description, quantity, unitPrice, total }.
+  items            Json
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  subscription     VendorSubscription? @relation(fields: [subscriptionId], references: [id], map: "invoices_subscription_id_fkey")
+  deal             Deal?         @relation(fields: [dealId], references: [id], map: "invoices_deal_id_fkey")
+  vendor           Vendor?       @relation(fields: [vendorId], references: [id], map: "invoices_vendor_id_fkey")
+  featuredPlacements FeaturedPlacement[]
+  brokerFees       BrokerFeeLedger[]
+  addOns           VendorAddOn[]
+
+  @@index([payerUserId], map: "invoices_payer_user_id_idx")
+  @@index([vendorId], map: "invoices_vendor_id_idx")
+  @@index([status], map: "invoices_status_idx")
+  @@index([type], map: "invoices_type_idx")
+  @@map("invoices")
+}
+
+enum InvoiceType {
+  subscription
+  lead_credits
+  featured
+  broker_fee
+  add_on
+
+  @@map("invoice_type")
+}
+
+enum InvoicePayerType {
+  vendor
+  broker
+
+  @@map("invoice_payer_type")
+}
+
+enum InvoiceStatus {
+  draft
+  issued
+  paid
+  overdue
+  cancelled
+
+  @@map("invoice_status")
+}
+
+/// Monotonic counter for invoice numbers, mirroring DealNumberSequence.
+/// One row per year; the billing module does
+/// `UPDATE ... SET next = next + 1 RETURNING next` atomically inside the
+/// transaction that creates the invoice.
+model InvoiceNumberSequence {
+  year Int @id
+  next Int @default(1)
+
+  @@map("invoice_number_sequence")
+}
+
+// --- 1. SUBSCRIPTIONS ---
+
+/// A vendor-facing tariff. Plans are admin-managed reference data; vendors pick
+/// one and a VendorSubscription row records the choice and its payment lifecycle.
+model SubscriptionPlan {
+  id                  String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// Stable code for lookups and feature flags, e.g. "pro_yearly".
+  code                String             @unique(map: "subscription_plans_code_key")
+  name                String
+  description         String?
+  price               Decimal            @db.Decimal(16, 2)
+  currency            String             @default("RUB")
+  billingPeriod       SubscriptionPeriod
+  /// Caps that gate the vendor's catalog. Null means unlimited.
+  maxProducts         Int?               @map("max_products")
+  maxRegions          Int?               @map("max_regions")
+  /// Credits granted on each renewal; added to the lead credit ledger when the
+  /// subscription invoice is confirmed.
+  includedLeadCredits Int                @default(0) @map("included_lead_credits")
+  hasFeatured         Boolean            @default(false) @map("has_featured")
+  hasPrioritySupport  Boolean            @default(false) @map("has_priority_support")
+  isActive            Boolean            @default(true) @map("is_active")
+  sortOrder           Int                @default(0) @map("sort_order")
+  subscriptions       VendorSubscription[]
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder], map: "subscription_plans_is_active_sort_order_idx")
+  @@map("subscription_plans")
+}
+
+enum SubscriptionPeriod {
+  monthly
+  quarterly
+  yearly
+
+  @@map("subscription_period")
+}
+
+/// A vendor's active or pending subscription. status moves
+/// pending_payment → active → (past_due | cancelled | expired). Exactly one
+/// non-terminal subscription per vendor is enforced by a partial unique index
+/// in the migration (the @@unique below covers the common single-active case).
+model VendorSubscription {
+  id               String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId         String               @map("vendor_id") @db.Uuid
+  planId           String               @map("plan_id") @db.Uuid
+  status           VendorSubscriptionStatus @default(pending_payment)
+  periodStart      DateTime             @map("period_start")
+  periodEnd        DateTime?            @map("period_end")
+  /// Amount actually owed for this period (snapshot of plan.price at purchase).
+  amount           Decimal              @db.Decimal(16, 2)
+  currency         String               @default("RUB")
+  /// Reference to the issued invoice awaiting or recording payment.
+  invoiceId        String?              @map("invoice_id") @db.Uuid
+  invoice          Invoice?             @relation(fields: [invoiceId], references: [id], map: "vendor_subscriptions_invoice_id_fkey")
+  invoices         Invoice[]
+  confirmedBy      String?              @map("confirmed_by") @db.Uuid
+  confirmedAt      DateTime?            @map("confirmed_at")
+  cancelledAt      DateTime?            @map("cancelled_at")
+  vendor           Vendor               @relation(fields: [vendorId], references: [id], onDelete: Cascade, map: "vendor_subscriptions_vendor_id_fkey")
+  plan             SubscriptionPlan     @relation(fields: [planId], references: [id], map: "vendor_subscriptions_plan_id_fkey")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+
+  @@index([vendorId], map: "vendor_subscriptions_vendor_id_idx")
+  @@index([status], map: "vendor_subscriptions_status_idx")
+  @@map("vendor_subscriptions")
+}
+
+enum VendorSubscriptionStatus {
+  pending_payment
+  active
+  past_due
+  cancelled
+  expired
+
+  @@map("vendor_subscription_status")
+}
+
+// --- 2. LEAD CREDITS ---
+
+/// Append-only ledger. The balance is SUM(delta) WHERE vendor_id = ?; there is
+/// no separate balance column to keep it race-free. Writes happen inside a
+/// Postgres advisory lock keyed on the vendor so two concurrent unlocks cannot
+/// both succeed against a single remaining credit.
+model LeadCreditLedger {
+  id          String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId    String             @map("vendor_id") @db.Uuid
+  /// Signed: positive on purchase/grant/reset, negative on spend.
+  delta       Int
+  reason      LeadCreditReason
+  /// Optional reference: invoiceId on purchase, dealId/RFQ id on unlock.
+  referenceId String?            @map("reference_id")
+  /// Snapshot of the running balance after this row, for fast display without
+  /// a full SUM. Maintained inside the same locked transaction as the delta.
+  balanceAfter Int              @map("balance_after")
+  vendor       Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade, map: "lead_credit_ledger_vendor_id_fkey")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  @@index([vendorId, createdAt], map: "lead_credit_ledger_vendor_id_created_at_idx")
+  @@index([reason], map: "lead_credit_ledger_reason_idx")
+  @@map("lead_credit_ledger")
+}
+
+enum LeadCreditReason {
+  purchase
+  admin_grant
+  rfq_unlock
+  monthly_reset
+  refund
+  subscription_grant
+
+  @@map("lead_credit_reason")
+}
+
+// --- 3. FEATURED PLACEMENTS ---
+
+/// A paid boost for a product in a specific surface for a time window. Created
+/// pending; activated when the invoice is confirmed. Product.featuredUntil is
+/// the denormalized "latest active boost end" used by the catalog query.
+model FeaturedPlacement {
+  id          String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  productId   String              @map("product_id") @db.Uuid
+  vendorId    String              @map("vendor_id") @db.Uuid
+  placement   FeaturedSurface
+  startAt     DateTime            @map("start_at")
+  endAt       DateTime            @map("end_at")
+  status      FeaturedStatus      @default(pending)
+  invoiceId   String?             @map("invoice_id") @db.Uuid
+  invoice     Invoice?            @relation(fields: [invoiceId], references: [id], map: "featured_placements_invoice_id_fkey")
+  product     Product             @relation(fields: [productId], references: [id], map: "featured_placements_product_id_fkey")
+  vendor      Vendor              @relation(fields: [vendorId], references: [id], map: "featured_placements_vendor_id_fkey")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  @@index([productId], map: "featured_placements_product_id_idx")
+  @@index([status, endAt], map: "featured_placements_status_end_at_idx")
+  @@index([placement, status], map: "featured_placements_placement_status_idx")
+  @@map("featured_placements")
+}
+
+enum FeaturedSurface {
+  category_top
+  home_featured
+  search_boost
+
+  @@map("featured_surface")
+}
+
+enum FeaturedStatus {
+  pending
+  active
+  expired
+  cancelled
+
+  @@map("featured_status")
+}
+
+// --- 4. VERIFICATION ---
+
+/// A vendor's request to be verified. status moves
+/// draft → submitted → under_review → (approved | rejected). approved sets
+/// Vendor.verificationTier and Vendor.verified; revoked returns them to none.
+model VerificationRequest {
+  id             String                 @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId       String                 @map("vendor_id") @db.Uuid
+  status         VerificationStatus     @default(draft)
+  /// Tier the vendor is applying for; granted on approval.
+  requestedTier  VerificationTier       @default(basic) @map("requested_tier")
+  contactName    String?                @map("contact_name")
+  contactPhone   String?                @map("contact_phone")
+  message        String?
+  submittedAt    DateTime?              @map("submitted_at")
+  /// Moderator who is reviewing or has reviewed.
+  reviewedBy     String?                @map("reviewed_by") @db.Uuid
+  reviewer       User?                  @relation("VerificationReviewer", fields: [reviewedBy], references: [id], map: "verification_requests_reviewed_by_fkey")
+  reviewedAt     DateTime?              @map("reviewed_at")
+  reviewerNotes  String?                @map("reviewer_notes")
+  /// When the granted tier expires. Maintained on approval; a cron job can
+  /// downgrade the vendor when this passes.
+  expiresAt      DateTime?              @map("expires_at")
+  vendor         Vendor                 @relation(fields: [vendorId], references: [id], onDelete: Cascade, map: "verification_requests_vendor_id_fkey")
+  documents      VerificationDocument[]
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+
+  @@index([status], map: "verification_requests_status_idx")
+  @@index([vendorId], map: "verification_requests_vendor_id_idx")
+  @@map("verification_requests")
+}
+
+enum VerificationStatus {
+  draft
+  submitted
+  under_review
+  approved
+  rejected
+  revoked
+
+  @@map("verification_status")
+}
+
+/// A document attached to a verification request. objectKey points at the
+/// private storage upload (see docs/STORAGE.md upload contract).
+model VerificationDocument {
+  id                   String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  verificationRequestId String              @map("verification_request_id") @db.Uuid
+  documentType         VerificationDocumentType
+  fileName             String              @map("file_name")
+  /// Backend-generated storage object key. The upload follows the same
+  /// ticket/upload/finalize contract as avatars; PDF is allowed in addition
+  /// to images because certificates and licenses are usually PDF.
+  objectKey            String              @map("object_key")
+  contentType          String              @map("content_type")
+  byteSize             Int                 @map("byte_size")
+  verificationRequest  VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade, map: "verification_documents_verification_request_id_fkey")
+  uploadedAt           DateTime            @default(now()) @map("uploaded_at")
+
+  @@index([verificationRequestId], map: "verification_documents_verification_request_id_idx")
+  @@map("verification_documents")
+}
+
+enum VerificationDocumentType {
+  inn
+  ogrn
+  license
+  iso_certificate
+  company_registration
+  other
+
+  @@map("verification_document_type")
+}
+
+// --- 5. BROKER SUCCESS-FEE ---
+
+/// One row per closed deal that earns a broker commission. Accrued when the
+/// deal transitions connection → completed; invoiced and paid later through
+/// the shared Invoice table. Deal.commission is the denormalized snapshot.
+model BrokerFeeLedger {
+  id          String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  dealId      String           @map("deal_id") @db.Uuid
+  brokerId    String           @map("broker_id") @db.Uuid
+  /// The deal total the percent is computed against.
+  baseAmount  Decimal          @db.Decimal(16, 2)
+  feePercent  Decimal          @db.Decimal(5, 2)
+  feeAmount   Decimal          @db.Decimal(16, 2)
+  status      BrokerFeeStatus  @default(accrued)
+  invoiceId   String?          @map("invoice_id") @db.Uuid
+  invoice     Invoice?         @relation(fields: [invoiceId], references: [id], map: "broker_fee_ledger_invoice_id_fkey")
+  accruedAt   DateTime         @default(now()) @map("accrued_at")
+  paidAt      DateTime?        @map("paid_at")
+  notes       String?
+  deal        Deal             @relation(fields: [dealId], references: [id], onDelete: Cascade, map: "broker_fee_ledger_deal_id_fkey")
+  broker      User             @relation(fields: [brokerId], references: [id], map: "broker_fee_ledger_broker_id_fkey")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@index([brokerId, status], map: "broker_fee_ledger_broker_id_status_idx")
+  @@index([dealId], map: "broker_fee_ledger_deal_id_idx")
+  @@index([status], map: "broker_fee_ledger_status_idx")
+  @@map("broker_fee_ledger")
+}
+
+enum BrokerFeeStatus {
+  accrued
+  invoiced
+  paid
+  written_off
+
+  @@map("broker_fee_status")
+}
+
+// --- 6. SaaS ADD-ONS ---
+
+/// A vendor's access to an add-on feature (CRM, analytics, API, tenders).
+/// Activated pending invoice confirmation, like subscriptions.
+model VendorAddOn {
+  id          String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId    String          @map("vendor_id") @db.Uuid
+  feature     VendorAddOnFeature
+  status      VendorAddOnStatus @default(pending)
+  activatedAt DateTime?        @map("activated_at")
+  expiresAt   DateTime?        @map("expires_at")
+  invoiceId   String?          @map("invoice_id") @db.Uuid
+  invoice     Invoice?         @relation(fields: [invoiceId], references: [id], map: "vendor_add_ons_invoice_id_fkey")
+  vendor      Vendor           @relation(fields: [vendorId], references: [id], onDelete: Cascade, map: "vendor_add_ons_vendor_id_fkey")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@index([vendorId, feature], map: "vendor_add_ons_vendor_id_feature_idx")
+  @@index([status], map: "vendor_add_ons_status_idx")
+  @@map("vendor_add_ons")
+}
+
+enum VendorAddOnFeature {
+  crm
+  analytics
+  api_access
+  tenders
+
+  @@map("vendor_add_on_feature")
+}
+
+enum VendorAddOnStatus {
+  pending
+  active
+  disabled
+  expired
+
+  @@map("vendor_add_on_status")
 }

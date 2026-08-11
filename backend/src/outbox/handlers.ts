@@ -43,6 +43,64 @@ export const taskHandlers = {
       await createAuthTasks(runtime).deliverPasswordChanged(input, signal)
     },
   },
+  // -------------------------------------------------------------------------
+  // Monetization notifications.
+  //
+  // These are placeholder handlers: they log the event and return 'skipped'
+  // until a dedicated monetization email template is wired (the auth notifier
+  // pattern is the template). Returning 'skipped' keeps the row audit-clean
+  // without retrying forever; swapping in real delivery later is a one-file
+  // change here.
+  // -------------------------------------------------------------------------
+  'subscriptions:activated': {
+    maxAttempts: 3,
+    run: async ({ payload }) => {
+      console.info('[monetization] subscription activated', payload)
+      return 'skipped' as const
+    },
+  },
+  'subscriptions:expiring': {
+    maxAttempts: 3,
+    run: async ({ payload }) => {
+      console.info('[monetization] subscription expiring soon', payload)
+      return 'skipped' as const
+    },
+  },
+  'leads:assigned': {
+    maxAttempts: 3,
+    run: async ({ payload }) => {
+      console.info('[monetization] lead assigned to vendor', payload)
+      return 'skipped' as const
+    },
+  },
+  'verification:approved': {
+    maxAttempts: 3,
+    run: async ({ payload }) => {
+      console.info('[monetization] verification approved', payload)
+      return 'skipped' as const
+    },
+  },
+  'verification:rejected': {
+    maxAttempts: 3,
+    run: async ({ payload }) => {
+      console.info('[monetization] verification rejected', payload)
+      return 'skipped' as const
+    },
+  },
+  'invoices:issued': {
+    maxAttempts: 3,
+    run: async ({ payload }) => {
+      console.info('[monetization] invoice issued', payload)
+      return 'skipped' as const
+    },
+  },
+  'broker:fee-invoiced': {
+    maxAttempts: 3,
+    run: async ({ payload }) => {
+      console.info('[monetization] broker fee invoiced', payload)
+      return 'skipped' as const
+    },
+  },
   // This is only a wake-up for a durable, single-flight rebuild controller. Publishing advances
   // desiredRevision and enqueues a unique website:rebuild:<revision> task; short reconciler passes
   // persist/adopt provider deployment state, verify the public artifact revision, and start one

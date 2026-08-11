@@ -22,9 +22,15 @@ export function createRequireAuth(
   })
 }
 
-export function createRequireRole(role: UserRole) {
+/**
+ * Require a single role or any of a set of roles. Passing an array is the
+ * multi-role form (e.g. an endpoint open to both `admin` and `moderator`);
+ * passing a single string is the strict-equality guard used by the template.
+ */
+export function createRequireRole(role: UserRole | UserRole[]) {
   return createMiddleware<AuthHttpEnv>(async (c, next) => {
-    if (c.var.user.role !== role) {
+    const allowed = Array.isArray(role) ? role : [role]
+    if (!allowed.includes(c.var.user.role)) {
       throw new AppError(403, 'FORBIDDEN', 'You do not have permission to access this resource')
     }
     await next()

@@ -9,9 +9,14 @@ import type { AppEnv } from './env'
 import { errorResponse, handleError, validationErrorHook } from './http/errors'
 import { createAuthSecurity, createFixedWindowRateLimit } from './http/security'
 import { createAuthModule, type AuthHttpEnv } from './modules/auth'
+import { createBillingModule } from './modules/billing'
+import { createBrokerModule } from './modules/broker'
 import { createCatalogModule } from './modules/catalog'
+import { createLeadsModule } from './modules/leads'
+import { createSubscriptionsModule } from './modules/subscriptions'
 import { createUploadsModule } from './modules/uploads'
 import { createUsersModule } from './modules/users'
+import { createVerificationModule } from './modules/verification'
 import {
   apiCorsAllowedHeaders,
   browserUploadExposedHeaders,
@@ -59,6 +64,36 @@ export function createApp({
     storage: storage.storage,
   })
   const catalog = createCatalogModule({ db: prisma })
+  const subscriptions = createSubscriptionsModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireVendor: auth.requireVendor,
+    requireAdmin: auth.requireAdmin,
+  })
+  const leads = createLeadsModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireVendor: auth.requireVendor,
+    requireAdmin: auth.requireAdmin,
+  })
+  const verification = createVerificationModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireVendor: auth.requireVendor,
+    requireModerator: auth.requireModerator,
+  })
+  const billing = createBillingModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireVendor: auth.requireVendor,
+    requireAdmin: auth.requireAdmin,
+  })
+  const broker = createBrokerModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireBroker: auth.requireBroker,
+    requireAdmin: auth.requireAdmin,
+  })
   const app = new OpenAPIHono<AuthHttpEnv>({
     defaultHook: validationErrorHook,
   })
@@ -108,6 +143,11 @@ export function createApp({
     app.use('/api/users/*', middleware)
     app.use('/api/admin/*', middleware)
     app.use('/api/uploads/*', middleware)
+    app.use('/api/subscriptions/*', middleware)
+    app.use('/api/leads/*', middleware)
+    app.use('/api/verification/*', middleware)
+    app.use('/api/billing/*', middleware)
+    app.use('/api/broker/*', middleware)
   }
   app.get('/', (c) => {
     return c.json({
@@ -142,6 +182,11 @@ export function createApp({
   app.route('/api/admin', users.adminRoutes)
   app.route('/api/uploads', uploads.routes)
   app.route('/api/catalog', catalog.routes)
+  app.route('/api/subscriptions', subscriptions.routes)
+  app.route('/api/leads', leads.routes)
+  app.route('/api/verification', verification.routes)
+  app.route('/api/billing', billing.routes)
+  app.route('/api/broker', broker.routes)
 
   // Only the filesystem driver needs the backend to serve the URLs it signs. With an S3 driver
   // the browser uploads straight to the bucket and there is nothing to mount here.

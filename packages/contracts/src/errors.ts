@@ -10,6 +10,8 @@ export const apiErrorCodeSchema = z.enum([
   'PAYLOAD_TOO_LARGE',
   'RATE_LIMITED',
   'AUTH_PASSWORD_RESET_INVALID',
+  // The caller must add credits before the operation can proceed (HTTP 402).
+  'PAYMENT_REQUIRED',
   // Upload failures a client can actually recover from, kept apart from generic CONFLICT so the
   // UI can say what to do: retry the transfer, pick a different file, or start over.
   'UPLOAD_NOT_COMPLETED',
