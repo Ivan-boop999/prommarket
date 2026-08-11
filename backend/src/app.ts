@@ -9,12 +9,15 @@ import type { AppEnv } from './env'
 import { errorResponse, handleError, validationErrorHook } from './http/errors'
 import { createAuthSecurity, createFixedWindowRateLimit } from './http/security'
 import { createAuthModule, type AuthHttpEnv } from './modules/auth'
+import { createAdminAnalyticsModule } from './modules/admin-analytics'
 import { createAdminCatalogModule } from './modules/admin-catalog'
 import { createBillingModule } from './modules/billing'
 import { createBrokerModule } from './modules/broker'
 import { createCatalogModule } from './modules/catalog'
 import { createDealsModule } from './modules/deals'
 import { createLeadsModule } from './modules/leads'
+import { createNotificationsModule } from './modules/notifications'
+import { createReviewsModule } from './modules/reviews'
 import { createSubscriptionsModule } from './modules/subscriptions'
 import { createUploadsModule } from './modules/uploads'
 import { createUsersModule } from './modules/users'
@@ -108,6 +111,21 @@ export function createApp({
     requireAuth: auth.requireAuth,
     requireAdmin: auth.requireAdmin,
   })
+  const reviews = createReviewsModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireBuyer: auth.requireBuyer,
+    requireVendor: auth.requireVendor,
+  })
+  const notifications = createNotificationsModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+  })
+  const adminAnalytics = createAdminAnalyticsModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireAdmin: auth.requireAdmin,
+  })
   const app = new OpenAPIHono<AuthHttpEnv>({
     defaultHook: validationErrorHook,
   })
@@ -165,6 +183,9 @@ export function createApp({
     app.use('/api/broker/*', middleware)
     app.use('/api/vendor-products/*', middleware)
     app.use('/api/admin-catalog/*', middleware)
+    app.use('/api/reviews/*', middleware)
+    app.use('/api/notifications/*', middleware)
+    app.use('/api/admin-analytics/*', middleware)
   }
   app.get('/', (c) => {
     return c.json({
@@ -207,6 +228,9 @@ export function createApp({
   app.route('/api/broker', broker.routes)
   app.route('/api/vendor-products', vendorProducts.routes)
   app.route('/api/admin-catalog', adminCatalog.routes)
+  app.route('/api/reviews', reviews.routes)
+  app.route('/api/notifications', notifications.routes)
+  app.route('/api/admin-analytics', adminAnalytics.routes)
 
   // Only the filesystem driver needs the backend to serve the URLs it signs. With an S3 driver
   // the browser uploads straight to the bucket and there is nothing to mount here.

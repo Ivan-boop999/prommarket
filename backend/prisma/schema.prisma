@@ -24,6 +24,8 @@ model User {
   brokerFees          BrokerFeeLedger[]
   verificationReviews VerificationRequest[] @relation("VerificationReviewer")
   paymentConfirmations Invoice[]           @relation("InvoiceConfirmer")
+  reviews             ProductReview[]
+  notifications       Notification[]
 
   @@index([role], map: "users_role_idx")
   @@map("users")
@@ -277,6 +279,7 @@ model Product {
   prices        ProductPrice[]
   deals         Deal[]
   featuredPlacements FeaturedPlacement[]
+  reviews       ProductReview[]
   createdAt     DateTime            @default(now()) @map("created_at")
   updatedAt     DateTime            @updatedAt @map("updated_at")
 
@@ -965,4 +968,53 @@ enum VendorAddOnStatus {
   expired
 
   @@map("vendor_add_on_status")
+}
+
+// =============================================================================
+// REVIEWS + NOTIFICATIONS (ПромМаркет iteration 7)
+//
+// Product reviews: a buyer who closed a deal on a product can leave one review.
+// Notifications: server-pushed events surfaced in the webapp cabinet; the WS
+// layer (deal chat) can broadcast these in real time later, but the table is
+// the source of truth and works without WS.
+// =============================================================================
+
+/// One review per (product, author). A buyer rates a product after a deal.
+model ProductReview {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  /// The user who wrote the review.
+  authorId  String   @map("author_id") @db.Uuid
+  rating    Int
+  title     String?
+  body      String?
+  /// A vendor may reply once; stored inline to keep the review self-contained.
+  vendorReply String? @map("vendor_reply")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "product_reviews_product_id_fkey")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([productId, authorId], map: "product_reviews_product_id_author_id_key")
+  @@index([productId], map: "product_reviews_product_id_idx")
+  @@index([authorId], map: "product_reviews_author_id_idx")
+  @@map("product_reviews")
+}
+
+/// In-app notification for a user (deal event, verification result, etc.).
+/// Read via GET /api/notifications; marked read via PATCH.
+model Notification {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      String
+  title     String
+  body      String?
+  /// Optional link to navigate to when clicked.
+  link      String?  @map("link")
+  isRead    Boolean  @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, isRead], map: "notifications_user_id_is_read_idx")
+  @@index([userId, createdAt], map: "notifications_user_id_created_at_idx")
+  @@map("notifications")
 }

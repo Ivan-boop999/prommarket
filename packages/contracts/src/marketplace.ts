@@ -643,3 +643,39 @@ export type UpdateProductInput = z.infer<typeof updateProductInputSchema>
 export type CreateCategoryInput = z.infer<typeof createCategoryInputSchema>
 export type UpdateCategoryInput = z.infer<typeof updateCategoryInputSchema>
 export type CreateAttributeInput = z.infer<typeof createAttributeInputSchema>
+
+// ---------------------------------------------------------------------------
+// REVIEWS (iteration 7)
+// ---------------------------------------------------------------------------
+
+export const productReviewSchema = z
+  .object({
+    id: z.uuid(),
+    productId: z.uuid(),
+    authorId: z.uuid(),
+    rating: z.number().int().min(1).max(5),
+    title: z.string().nullable(),
+    body: z.string().nullable(),
+    vendorReply: z.string().nullable(),
+    createdAt: datetimeSchema,
+    updatedAt: datetimeSchema,
+  })
+  .strict()
+
+export const createReviewInputSchema = z
+  .object({
+    rating: z.number().int().min(1).max(5),
+    title: z.string().trim().max(200).optional(),
+    body: z.string().trim().max(5000).optional(),
+  })
+  .strict()
+
+export const reviewVendorReplyInputSchema = z
+  .object({
+    reply: z.string().trim().min(1).max(2000),
+  })
+  .strict()
+
+export type ProductReview = z.infer<typeof productReviewSchema>
+export type CreateReviewInput = z.infer<typeof createReviewInputSchema>
+export type ReviewVendorReplyInput = z.infer<typeof reviewVendorReplyInputSchema>
