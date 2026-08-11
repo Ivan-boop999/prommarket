@@ -55,6 +55,27 @@ const getDealRoute = createRoute({
   },
 })
 
+/**
+ * Deals for the authenticated user, scoped by role:
+ *  - buyer  → deals where they are the buyer
+ *  - broker → deals where they are the broker
+ *  - vendor → deals on their products (resolved via vendor profile)
+ *  - admin  → all deals (same as the generic list)
+ */
+const listMyDealsRoute = createRoute({
+  method: 'get',
+  path: '/me',
+  security: bearerSecurity,
+  request: { query: dealsQuerySchema },
+  responses: {
+    200: {
+      description: 'Deals for the current user',
+      content: { 'application/json': { schema: paginatedResponseSchema(dealListItemSchema) } },
+    },
+    401: { content: errorContent, description: 'Authentication required' },
+  },
+})
+
 const createDealRoute = createRoute({
   method: 'post',
   path: '/',
@@ -113,15 +134,40 @@ const createMessageRoute = createRoute({
 type CreateDealsRoutesOptions = {
   requireAuth: MiddlewareHandler
   service: DealsService
+  /** Resolve buyer/vendor/broker profile id from a user id, for the /me scope. */
+  resolveProfileId: (userId: string, role: string) => Promise<string | null>
 }
 
-export function createDealsRoutes({ requireAuth, service }: CreateDealsRoutesOptions) {
+export function createDealsRoutes({ requireAuth, service, resolveProfileId }: CreateDealsRoutesOptions) {
   const routes = new OpenAPIHono<AuthHttpEnv>({ defaultHook: validationErrorHook })
   routes.use('*', requireAuth)
 
   routes.openapi(listDealsRoute, async (c) => {
     const query: DealsQuery = c.req.valid('query')
     const result = await service.list(query)
+    return c.json(result, 200)
+  })
+
+  routes.openapi(listMyDealsRoute, async (c) => {
+    const query: DealsQuery = c.req.valid('query')
+    const role = c.var.user.role
+    const userId = c.var.user.id
+    // Admin sees everything; others are scoped to their profile.
+    if (role === 'admin') {
+      const result = await service.list(query)
+      return c.json(result, 200)
+    }
+    const profileId = await resolveProfileId(userId, role)
+    if (!profileId) {
+      return c.json({ items: [], page: query.page, pageSize: query.pageSize, total: 0, totalPages: 0 }, 200)
+    }
+    const scopedQuery: DealsQuery = {
+      ...query,
+      ...(role === 'buyer' ? { buyerId: profileId } : {}),
+      ...(role === 'broker' ? { brokerId: profileId } : {}),
+      ...(role === 'vendor' ? { vendorId: profileId } : {}),
+    }
+    const result = await service.list(scopedQuery)
     return c.json(result, 200)
   })
 

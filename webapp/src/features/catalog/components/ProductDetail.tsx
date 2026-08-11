@@ -102,8 +102,15 @@ export function ProductDetail() {
             <Badge variant="outline" className={productStatusTone(product.status)}>
               {productStatusLabel[product.status]}
             </Badge>
-            {product.vendorVerified && (
-              <Badge variant="secondary">✓ Проверенный поставщик</Badge>
+            {product.vendorVerificationTier === 'pro' && (
+              <Badge className="bg-amber-500 text-white hover:bg-amber-600">
+                ★ Pro поставщик
+              </Badge>
+            )}
+            {product.vendorVerificationTier === 'basic' && (
+              <Badge variant="secondary" className="text-emerald-700">
+                ✓ Проверенный поставщик
+              </Badge>
             )}
             {product.volumeDiscountPercent !== null && (
               <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">

@@ -57,8 +57,13 @@ export function ProductCard({ product }: { product: ProductListItem }) {
               </div>
               <div className="text-xs text-muted-foreground">{product.vendorName}</div>
             </div>
-            {product.vendorVerified && (
-              <Badge variant="secondary" className="text-xs">
+            {product.vendorVerificationTier === 'pro' && (
+              <Badge className="bg-amber-500 text-xs text-white hover:bg-amber-600">
+                ★ Pro
+              </Badge>
+            )}
+            {product.vendorVerificationTier === 'basic' && (
+              <Badge variant="secondary" className="text-xs text-emerald-700">
                 ✓ Проверен
               </Badge>
             )}

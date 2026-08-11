@@ -153,7 +153,7 @@ export function createPrismaProductsRepository(db: DbClient): ProductReader {
 // ---------------------------------------------------------------------------
 
 const productListItemInclude = {
-  vendor: { select: { id: true, companyName: true, verified: true } },
+  vendor: { select: { id: true, companyName: true, verified: true, verificationTier: true } },
   images: { orderBy: [{ isPrimary: 'desc' as const }, { order: 'asc' as const }] },
   prices: true,
 } satisfies Prisma.ProductInclude
@@ -166,6 +166,7 @@ const productDetailInclude = {
       id: true,
       companyName: true,
       verified: true,
+      verificationTier: true,
       description: true,
       rating: true,
       totalDeals: true,
@@ -331,6 +332,7 @@ function toProductListItem(row: ProductListRow): ProductListItem {
     vendorId: row.vendor.id,
     vendorName: row.vendor.companyName,
     vendorVerified: row.vendor.verified,
+    vendorVerificationTier: row.vendor.verificationTier,
     categoryId: row.categoryId,
     views: row.views,
     createdAt: row.createdAt.toISOString(),
@@ -354,6 +356,7 @@ function toProductDetail(row: ProductDetailRow): ProductDetail {
     vendorId: row.vendor.id,
     vendorName: row.vendor.companyName,
     vendorVerified: row.vendor.verified,
+    vendorVerificationTier: row.vendor.verificationTier,
     categoryId: row.category.id,
     views: row.views,
     createdAt: row.createdAt.toISOString(),

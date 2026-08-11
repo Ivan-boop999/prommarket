@@ -55,7 +55,7 @@ type ProductDetailRow = {
   prices: Array<{ id: string; type: string; price: { toString(): string } | null; currency: string; includesVat: boolean; vatRate: number; volumeFrom: number | null; volumeTo: number | null }>
   attributes: Array<{ id: string; value: unknown; attribute: { id: string; name: string; slug: string } }>
   category: { id: string; name: string; slug: string }
-  vendor: { id: string; companyName: string; verified: boolean; description: string | null; rating: { toString(): string }; totalDeals: number }
+  vendor: { id: string; companyName: string; verified: boolean; verificationTier: string; description: string | null; rating: { toString(): string }; totalDeals: number }
 }
 
 const detailInclude = {
@@ -63,7 +63,7 @@ const detailInclude = {
   prices: { orderBy: { type: 'asc' as const } },
   attributes: { include: { attribute: { select: { id: true, name: true, slug: true } } } },
   category: { select: { id: true } },
-  vendor: { select: { id: true, companyName: true, verified: true, description: true, rating: true, totalDeals: true } },
+  vendor: { select: { id: true, companyName: true, verified: true, verificationTier: true, description: true, rating: true, totalDeals: true } },
 } as const
 
 // Mapper mirrors the catalog module's toProductDetail exactly so the wire shape
@@ -105,6 +105,7 @@ function toProductDetail(row: ProductDetailRow): ProductDetail {
     vendorId: row.vendor.id,
     vendorName: row.vendor.companyName,
     vendorVerified: row.vendor.verified,
+    vendorVerificationTier: row.vendor.verificationTier as ProductDetail['vendorVerificationTier'],
     categoryId: row.category.id,
     views: row.views,
     createdAt: row.createdAt.toISOString(),

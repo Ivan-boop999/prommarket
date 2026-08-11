@@ -2,6 +2,7 @@ import { z } from 'zod'
 import {
   paginatedResponseSchema,
   paginationQuerySchema,
+  verificationTierSchema,
 } from './marketplace'
 
 /**
@@ -49,8 +50,6 @@ export {
 // ---------------------------------------------------------------------------
 // ENUMS
 // ---------------------------------------------------------------------------
-
-export const verificationTierSchema = z.enum(['none', 'basic', 'pro'])
 
 export const subscriptionPeriodSchema = z.enum(['monthly', 'quarterly', 'yearly'])
 

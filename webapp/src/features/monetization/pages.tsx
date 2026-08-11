@@ -2,6 +2,7 @@ import type { UserDto } from '@web-app-demo/contracts'
 import { useState } from 'react'
 
 import { PageContainer, PageHeader } from '@/components/PageLayout'
+import { BuyerDealsPanel } from '@/features/deals'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -673,23 +674,12 @@ export function BrokerFeesPanel() {
 }
 
 // ===========================================================================
-// BUYER: home (placeholder until RFQ flow lands in iteration 3-5)
+// BUYER: home — RFQ pipeline. Renders the shared BuyerDealsPanel from the
+// deals feature so the buyer sees every RFQ they have placed and its status.
 // ===========================================================================
 
 export function BuyerHomePanel({ user }: { user: UserDto }) {
-  return (
-    <PageContainer>
-      <PageHeader
-        title="Кабинет покупателя"
-        description={`Здравствуйте, ${user.displayName ?? user.email}. Здесь появятся ваши заявки (RFQ) и сделки.`}
-      />
-      <Card>
-        <CardContent className="py-8 text-center text-sm text-muted-foreground">
-          Раздел заявок и сделок будет добавлен в итерации 5 (модуль deals + RFQ).
-        </CardContent>
-      </Card>
-    </PageContainer>
-  )
+  return <BuyerDealsPanel user={user} />
 }
 
 // ===========================================================================

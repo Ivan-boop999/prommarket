@@ -58,6 +58,9 @@ export const dealStatusSchema = z.enum([
 
 export const messageRoleSchema = z.enum(['broker', 'vendor', 'buyer'])
 
+/** Verification tier granted to a vendor by an approved VerificationRequest. */
+export const verificationTierSchema = z.enum(['none', 'basic', 'pro'])
+
 // ---------------------------------------------------------------------------
 // SHARED PRIMITIVES
 // ---------------------------------------------------------------------------
@@ -207,6 +210,8 @@ export const productListItemSchema = z
     vendorId: z.uuid(),
     vendorName: z.string(),
     vendorVerified: z.boolean(),
+    /** Verification tier: 'none' | 'basic' | 'pro'. Drives the badge variant. */
+    vendorVerificationTier: verificationTierSchema,
     categoryId: z.uuid(),
     views: z.number().int(),
     createdAt: datetimeSchema,
