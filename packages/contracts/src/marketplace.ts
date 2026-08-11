@@ -418,6 +418,52 @@ export function paginatedResponseSchema<T extends z.ZodTypeAny>(itemSchema: T) {
 }
 
 // ---------------------------------------------------------------------------
+// SEARCH (unified product + category matching)
+// ---------------------------------------------------------------------------
+
+export const searchQuerySchema = paginationQuerySchema
+  .extend({
+    query: z.string().trim().min(1).max(200),
+    categoryId: z.uuid().optional(),
+  })
+  .strict()
+
+/** Compact product hit for the search dropdown and results page. */
+export const searchProductHitSchema = z
+  .object({
+    id: z.uuid(),
+    title: z.string(),
+    slug: z.string(),
+    mainPrice: decimalStringSchema.nullable(),
+    currency: z.string(),
+    status: productStatusSchema,
+    primaryImage: productImageSchema.nullable(),
+    vendorName: z.string(),
+  })
+  .strict()
+
+export const searchCategoryHitSchema = z
+  .object({
+    id: z.uuid(),
+    name: z.string(),
+    slug: z.string(),
+    productCount: z.number().int(),
+  })
+  .strict()
+
+export const searchResultSchema = z
+  .object({
+    query: z.string(),
+    products: z.array(searchProductHitSchema),
+    categories: z.array(searchCategoryHitSchema),
+    page: z.number().int(),
+    pageSize: z.number().int(),
+    total: z.number().int(),
+    totalPages: z.number().int(),
+  })
+  .strict()
+
+// ---------------------------------------------------------------------------
 // TYPES
 // ---------------------------------------------------------------------------
 
@@ -447,3 +493,7 @@ export type ProductsQuery = z.infer<typeof productsQuerySchema>
 export type ProductSortField = z.infer<typeof productSortFieldSchema>
 export type SortDirection = z.infer<typeof sortDirectionSchema>
 export type PaginatedResponseMeta = z.infer<typeof paginatedResponseMetaSchema>
+export type SearchQuery = z.infer<typeof searchQuerySchema>
+export type SearchProductHit = z.infer<typeof searchProductHitSchema>
+export type SearchCategoryHit = z.infer<typeof searchCategoryHitSchema>
+export type SearchResult = z.infer<typeof searchResultSchema>

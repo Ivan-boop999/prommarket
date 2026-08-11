@@ -47,6 +47,22 @@ const resetPasswordRoute = createRoute({
   component: lazyRouteComponent(() => import('./pages'), 'ResetPasswordPage'),
 })
 
+// Public marketplace routes. No auth guard: a buyer must be able to browse the
+// catalog before signing in. Filter state lives in the URL via validateSearch
+// so catalog URLs are shareable and back/forward works natively.
+const catalogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/catalog',
+  validateSearch: catalogSearchParser,
+  component: lazyRouteComponent(() => import('./pages'), 'CatalogPageWrapper'),
+})
+
+const productDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/catalog/$productId',
+  component: lazyRouteComponent(() => import('./pages'), 'ProductDetailPageWrapper'),
+})
+
 const userWorkspaceRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'userWorkspace',
@@ -101,6 +117,8 @@ const routeTree = rootRoute.addChildren([
   signupRoute,
   forgotPasswordRoute,
   resetPasswordRoute,
+  catalogRoute,
+  productDetailRoute,
   userWorkspaceRoute.addChildren([
     userHomeRoute,
     userProfileRoute,
@@ -118,6 +136,27 @@ export const router = createRouter({ routeTree })
 function returnToSearch(search: Record<string, unknown>) {
   return {
     returnTo: typeof search.returnTo === 'string' ? search.returnTo : undefined,
+  }
+}
+
+/**
+ * Catalog filter state derived from URL search params. All fields are optional
+ * so a bare `/catalog` URL loads the unfiltered first page. `page` is coerced
+ * to a number and clamped to >=1 so a malformed link cannot request page 0.
+ */
+function catalogSearchParser(search: Record<string, unknown>) {
+  const page =
+    typeof search.page === 'string' && /^\d+$/.test(search.page)
+      ? Math.max(1, Number(search.page))
+      : typeof search.page === 'number'
+        ? Math.max(1, Math.floor(search.page))
+        : undefined
+  return {
+    categoryId: typeof search.categoryId === 'string' ? search.categoryId : undefined,
+    search: typeof search.search === 'string' ? search.search : undefined,
+    status: typeof search.status === 'string' ? search.status : undefined,
+    sortBy: typeof search.sortBy === 'string' ? search.sortBy : undefined,
+    page,
   }
 }
 

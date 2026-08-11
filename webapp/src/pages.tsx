@@ -9,6 +9,7 @@ import {
 } from '@/components/WebRouteSections'
 import { WorkspaceShell } from '@/components/WorkspaceShell'
 import { AdminDashboard, AdminSettings, AdminUsers } from '@/features/admin'
+import { CatalogPage, ProductDetailPage } from '@/features/catalog'
 import {
   AuthPageShell,
   clearPasswordResetTokenHash,
@@ -134,6 +135,14 @@ export function NotFoundPage() {
 
   const destination = auth.user ? homePathForRole(auth.user.role) : '/login'
   return <NotFoundSection destination={destination} />
+}
+
+export function CatalogPageWrapper() {
+  return <CatalogPage />
+}
+
+export function ProductDetailPageWrapper() {
+  return <ProductDetailPage />
 }
 
 function WorkspaceRoute({ role }: { role: UserRole }) {
