@@ -156,6 +156,12 @@ const vendorHomeRoute = createRoute({
   component: lazyRouteComponent(() => import('./pages'), 'VendorHomePage'),
 })
 
+const vendorProductsRoute = createRoute({
+  getParentRoute: () => vendorWorkspaceRoute,
+  path: '/vendor/products',
+  component: lazyRouteComponent(() => import('./pages'), 'VendorProductsPage'),
+})
+
 const vendorBillingRoute = createRoute({
   getParentRoute: () => vendorWorkspaceRoute,
   path: '/vendor/billing',
@@ -256,6 +262,7 @@ const routeTree = rootRoute.addChildren([
   ]),
   vendorWorkspaceRoute.addChildren([
     vendorHomeRoute,
+    vendorProductsRoute,
     vendorBillingRoute,
     vendorCreditsRoute,
     vendorVerifyRoute,

@@ -4,6 +4,7 @@ export type UserRoutePath = '/app' | '/app/profile' | '/app/settings'
 export type AdminRoutePath = '/admin' | '/admin/users' | '/admin/settings' | '/admin/verification' | '/admin/billing'
 export type VendorRoutePath =
   | '/vendor'
+  | '/vendor/products'
   | '/vendor/billing'
   | '/vendor/credits'
   | '/vendor/verify'
@@ -39,6 +40,7 @@ const navigationByRole = {
   // there.
   vendor: [
     { label: 'Кабинет', to: '/vendor' },
+    { label: 'Товары', to: '/vendor/products' },
     { label: 'Подписка', to: '/vendor/billing' },
     { label: 'Лид-кредиты', to: '/vendor/credits' },
     { label: 'Верификация', to: '/vendor/verify' },

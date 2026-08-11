@@ -1,7 +1,15 @@
-import { useQuery } from '@tanstack/react-query'
-import type { ProductsQuery } from '@web-app-demo/contracts'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { CreateReviewInput, ProductsQuery } from '@web-app-demo/contracts'
 
-import { getProduct, listCategories, listProducts, listVendors } from './api'
+import { useAuth } from '@/features/auth'
+import {
+  createReview,
+  getProduct,
+  listCategories,
+  listProductReviews,
+  listProducts,
+  listVendors,
+} from './api'
 
 /**
  * Catalog query hooks.
@@ -17,6 +25,7 @@ export const catalogQueryKeys = {
   products: (query: ProductsQuery) => [...catalogQueryKeys.all, 'products', query] as const,
   product: (id: string) => [...catalogQueryKeys.all, 'product', id] as const,
   vendors: () => [...catalogQueryKeys.all, 'vendors'] as const,
+  reviews: (productId: string) => [...catalogQueryKeys.all, 'reviews', productId] as const,
 }
 
 export function useCatalogCategoriesQuery() {
@@ -45,5 +54,26 @@ export function useCatalogVendorsQuery() {
   return useQuery({
     queryKey: catalogQueryKeys.vendors(),
     queryFn: listVendors,
+  })
+}
+
+// --- Reviews ---
+
+export function useProductReviewsQuery(productId: string | undefined) {
+  return useQuery({
+    queryKey: catalogQueryKeys.reviews(productId ?? ''),
+    queryFn: () => listProductReviews(productId!),
+    enabled: Boolean(productId),
+  })
+}
+
+export function useCreateReviewMutation(productId: string) {
+  const auth = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateReviewInput) => createReview(auth.transport, productId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: catalogQueryKeys.reviews(productId) })
+    },
   })
 }

@@ -32,6 +32,7 @@ const iconsByPath = {
   // Vendor workspace (ПромМаркет). Icons reuse the safe set already imported;
   // a later pass can swap in more specific glyphs once the icon set is verified.
   '/vendor': Home01Icon,
+  '/vendor/products': DashboardSquare01Icon,
   '/vendor/billing': DashboardSquare01Icon,
   '/vendor/credits': DashboardSquare01Icon,
   '/vendor/verify': UserGroupIcon,

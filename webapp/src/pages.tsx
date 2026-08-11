@@ -36,6 +36,7 @@ import {
   VendorHomePanel,
   VendorVerifyPanel,
 } from '@/features/monetization'
+import { VendorProductsPanel } from '@/features/vendor-products'
 
 export function HomePage() {
   const auth = useAuth()
@@ -148,6 +149,10 @@ export function VendorHomePage() {
 
 export function VendorBillingPage() {
   return <VendorBillingPanel />
+}
+
+export function VendorProductsPage() {
+  return <VendorProductsPanel />
 }
 
 export function VendorCreditsPage() {

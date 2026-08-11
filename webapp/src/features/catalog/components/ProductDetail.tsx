@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { formatPrice, productStatusLabel, productStatusTone } from '../model'
+import { ProductReviews } from './ProductReviews'
 import { useProductDetailQuery } from '../queries'
 
 /**
@@ -55,6 +56,7 @@ export function ProductDetail() {
   const product = query.data
 
   return (
+    <>
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <Link
         to="/catalog"
@@ -203,6 +205,8 @@ export function ProductDetail() {
         </CardContent>
       </Card>
     </div>
+    <ProductReviews productId={product.id} />
+    </>
   )
 }
 

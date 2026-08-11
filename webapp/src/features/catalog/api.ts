@@ -7,9 +7,13 @@ import {
   searchResultSchema,
   vendorSummarySchema,
   categorySchema,
+  productReviewSchema,
+  createReviewInputSchema,
   type Category,
+  type CreateReviewInput,
   type ProductDetail,
   type ProductListItem,
+  type ProductReview,
   type ProductsQuery,
   type SearchQuery,
   type SearchResult,
@@ -18,6 +22,7 @@ import {
 import { z } from 'zod'
 
 import { publicClient } from '@/platform/api/public-client'
+import type { AuthenticatedTransport } from '@/platform/api'
 
 /**
  * Catalog API. All endpoints are public (no session required), so they go
@@ -93,4 +98,25 @@ export function productsQueryToSearchParams(query: ProductsQuery): URLSearchPara
     }
   }
   return search
+}
+
+// --- Reviews (public read, authenticated write) ---
+
+export function listProductReviews(productId: string): Promise<ProductReview[]> {
+  return publicClient.request(
+    `/api/reviews/products/${encodeURIComponent(productId)}/reviews`,
+    z.array(productReviewSchema),
+  )
+}
+
+export function createReview(
+  transport: AuthenticatedTransport,
+  productId: string,
+  input: CreateReviewInput,
+): Promise<ProductReview> {
+  return transport.request(
+    `/api/reviews/products/${encodeURIComponent(productId)}/reviews`,
+    productReviewSchema,
+    { method: 'POST', body: createReviewInputSchema.parse(input) },
+  )
 }
