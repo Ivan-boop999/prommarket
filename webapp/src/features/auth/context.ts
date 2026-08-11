@@ -14,6 +14,8 @@ export type AuthContextValue = {
   isAuthenticated: boolean
   sessionError: Error | null
   retrySession: () => Promise<void>
+  /** Raw JWT, exposed so features like the deal-chat WebSocket can auth the upgrade. */
+  accessToken: string | null
   transport: AuthenticatedTransport
   register: (input: RegisterRequest) => Promise<void>
   login: (input: LoginRequest) => Promise<void>

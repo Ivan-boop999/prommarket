@@ -1,11 +1,14 @@
+import { Fragment, useState } from 'react'
 import type { UserDto } from '@web-app-demo/contracts'
 
 import { PageContainer, PageHeader } from '@/components/PageLayout'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useMyDealsQuery } from './queries'
+import { DealChat } from './DealChat'
 
 /**
  * Buyer's deal pipeline. Shows every RFQ/deal the buyer has placed, with its
@@ -15,6 +18,7 @@ import { useMyDealsQuery } from './queries'
 export function BuyerDealsPanel({ user }: { user: UserDto }) {
   const dealsQuery = useMyDealsQuery({ page: 1, pageSize: 50 })
   const deals = dealsQuery.data?.items ?? []
+  const [openDealId, setOpenDealId] = useState<string | null>(null)
 
   return (
     <PageContainer>
@@ -41,23 +45,42 @@ export function BuyerDealsPanel({ user }: { user: UserDto }) {
                   <TableHead>Кол-во</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Дата</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {deals.map((deal) => (
-                  <TableRow key={deal.id}>
-                    <TableCell className="font-mono text-xs">{deal.dealNumber}</TableCell>
-                    <TableCell className="font-medium">{deal.title}</TableCell>
-                    <TableCell className="text-muted-foreground">{deal.productTitle ?? '—'}</TableCell>
-                    <TableCell className="text-muted-foreground">{deal.vendorName ?? '—'}</TableCell>
-                    <TableCell>{deal.quantity ?? '—'}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(deal.status)}>{statusLabel(deal.status)}</Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {new Date(deal.createdAt).toLocaleDateString('ru-RU')}
-                    </TableCell>
-                  </TableRow>
+                  <Fragment key={deal.id}>
+                    <TableRow>
+                      <TableCell className="font-mono text-xs">{deal.dealNumber}</TableCell>
+                      <TableCell className="font-medium">{deal.title}</TableCell>
+                      <TableCell className="text-muted-foreground">{deal.productTitle ?? '—'}</TableCell>
+                      <TableCell className="text-muted-foreground">{deal.vendorName ?? '—'}</TableCell>
+                      <TableCell>{deal.quantity ?? '—'}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(deal.status)}>{statusLabel(deal.status)}</Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {new Date(deal.createdAt).toLocaleDateString('ru-RU')}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setOpenDealId(openDealId === deal.id ? null : deal.id)}
+                        >
+                          {openDealId === deal.id ? 'Скрыть чат' : 'Чат'}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {openDealId === deal.id && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="bg-muted/30 p-4">
+                          <DealChat dealId={deal.id} />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>

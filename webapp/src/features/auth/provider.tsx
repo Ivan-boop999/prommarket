@@ -175,6 +175,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isAuthenticated: Boolean(meQuery.data?.user),
       sessionError,
       retrySession,
+      accessToken,
       transport,
       register,
       login,
@@ -182,7 +183,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       requestPasswordReset,
       confirmPasswordReset,
     }),
-    [confirmPasswordReset, isBootstrapping, login, logout, meQuery.data?.user, register, requestPasswordReset, retrySession, sessionError, transport],
+    [accessToken, confirmPasswordReset, isBootstrapping, login, logout, meQuery.data?.user, register, requestPasswordReset, retrySession, sessionError, transport],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
