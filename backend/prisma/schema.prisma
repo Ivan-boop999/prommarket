@@ -8,16 +8,19 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  email        String        @unique
-  passwordHash String?       @map("password_hash")
-  displayName  String?       @map("display_name")
-  role         UserRole      @default(user)
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
+  id                  String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  email               String               @unique
+  passwordHash        String?              @map("password_hash")
+  displayName         String?              @map("display_name")
+  role                UserRole             @default(user)
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
   sessions            AuthSession[]
   passwordResetTokens PasswordResetToken[]
   avatars             UserAvatar[]
+  vendor              Vendor?
+  buyer               Buyer?
+  dealsAsBroker       Deal[]               @relation("DealBroker")
 
   @@index([role], map: "users_role_idx")
   @@map("users")
@@ -71,6 +74,10 @@ model PasswordResetToken {
 enum UserRole {
   user
   admin
+  vendor
+  broker
+  buyer
+  moderator
 
   @@map("user_role")
 }
@@ -149,4 +156,364 @@ model AuthSession {
   @@index([userId], map: "auth_sessions_user_id_idx")
   @@index([expiresAt], map: "auth_sessions_expires_at_idx")
   @@map("auth_sessions")
+}
+
+// =============================================================================
+// MARKETPLACE (ПромМаркет port)
+//
+// Adapted from the original Next.js/SQLite schema to PostgreSQL + vibe
+// conventions: UUIDv7 PKs, snake_case column names via @map, real enums,
+// Json for EAV values and SELECT options (the original stored both as
+// JSON-in-a-String, which was lossy and un-queryable).
+// =============================================================================
+
+// --- CATEGORIES (tree, unlimited depth) ---
+
+model Category {
+  id           String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name         String
+  slug         String              @unique(map: "categories_slug_key")
+  description  String?
+  parentId     String?             @map("parent_id") @db.Uuid
+  order        Int                 @default(0)
+  icon         String?
+  image        String?
+  /// Denormalized counter; maintained by application code, not a DB trigger.
+  productCount Int                 @default(0) @map("product_count")
+  parent       Category?           @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull, map: "categories_parent_id_fkey")
+  children     Category[]          @relation("CategoryTree")
+  attributes   CategoryAttribute[]
+  products     Product[]
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  @@index([parentId], map: "categories_parent_id_idx")
+  @@map("categories")
+}
+
+// --- EAV ATTRIBUTES ---
+
+model Attribute {
+  id           String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name         String
+  slug         String              @unique(map: "attributes_slug_key")
+  description  String?
+  type         AttributeType       @default(text)
+  unit         String?
+  /// JSON array of option strings for SELECT / MULTI_SELECT. Null for other types.
+  options      Json?
+  isFilterable Boolean             @default(false) @map("is_filterable")
+  isRequired   Boolean             @default(false) @map("is_required")
+  order        Int                 @default(0)
+  categories   CategoryAttribute[]
+  values       ProductAttribute[]
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  @@map("attributes")
+}
+
+/// @map to lowercase values because PostgreSQL enums are case-sensitive and the
+/// template's existing enums (user_role, task_outbox_status) all use lowercase.
+enum AttributeType {
+  text
+  number
+  number_range
+  select
+  multi_select
+  boolean
+  file
+  dimensions
+
+  @@map("attribute_type")
+}
+
+/// Category-Attribute junction. `inherited` flags values taken from a parent
+/// category; not auto-populated today but kept for future inheritance work.
+model CategoryAttribute {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  categoryId  String    @map("category_id") @db.Uuid
+  attributeId String    @map("attribute_id") @db.Uuid
+  inherited   Boolean   @default(false)
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "category_attributes_category_id_fkey")
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade, map: "category_attributes_attribute_id_fkey")
+
+  @@unique([categoryId, attributeId], map: "category_attributes_category_id_attribute_id_key")
+  @@index([attributeId], map: "category_attributes_attribute_id_idx")
+  @@map("category_attributes")
+}
+
+// --- PRODUCTS ---
+
+model Product {
+  id            String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  title         String
+  slug          String              @unique(map: "products_slug_key")
+  description   String?
+  sku           String?
+  oemNumber     String?             @map("oem_number")
+  brand         String?
+  model         String?
+  year          Int?
+  status        ProductStatus       @default(new)
+  availability  ProductAvailability @default(in_stock)
+  /// Human-readable lead time, e.g. "2-3 недели".
+  leadTime      String?             @map("lead_time")
+  conditionNote String?             @map("condition_note")
+  categoryId    String              @map("category_id") @db.Uuid
+  vendorId      String              @map("vendor_id") @db.Uuid
+  views         Int                 @default(0)
+  category      Category            @relation(fields: [categoryId], references: [id], map: "products_category_id_fkey")
+  vendor        Vendor              @relation(fields: [vendorId], references: [id], map: "products_vendor_id_fkey")
+  images        ProductImage[]
+  attributes    ProductAttribute[]
+  prices        ProductPrice[]
+  deals         Deal[]
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  @@index([categoryId], map: "products_category_id_idx")
+  @@index([vendorId], map: "products_vendor_id_idx")
+  @@index([status], map: "products_status_idx")
+  @@map("products")
+}
+
+enum ProductStatus {
+  new
+  used
+  refurbished
+  spare_parts
+  storage
+
+  @@map("product_status")
+}
+
+enum ProductAvailability {
+  in_stock
+  on_order
+
+  @@map("product_availability")
+}
+
+/// EAV value. Stored as Json so NUMBER / NUMBER_RANGE / MULTI_SELECT / DIMENSIONS
+/// stay structured and queryable, fixing the original's lossy String column.
+model ProductAttribute {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  attributeId String    @map("attribute_id") @db.Uuid
+  /// Structured value. Shape depends on Attribute.type: scalar for text/number/boolean,
+  /// array for multi_select, {min,max} for number_range, {l,w,h} for dimensions.
+  value       Json
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade, map: "product_attributes_product_id_fkey")
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade, map: "product_attributes_attribute_id_fkey")
+
+  @@unique([productId, attributeId], map: "product_attributes_product_id_attribute_id_key")
+  @@index([attributeId], map: "product_attributes_attribute_id_idx")
+  @@map("product_attributes")
+}
+
+model ProductImage {
+  id        String  @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// URL or object key. Resolves through the storage layer when served.
+  url       String
+  alt       String?
+  order     Int     @default(0)
+  isPrimary Boolean @default(false) @map("is_primary")
+  productId String  @map("product_id") @db.Uuid
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade, map: "product_images_product_id_fkey")
+
+  @@index([productId], map: "product_images_product_id_idx")
+  @@map("product_images")
+}
+
+/// One product has 1..N price rows: a FIXED main price, optional VOLUME tiers,
+/// or ON_REQUEST (price hidden). VAT metadata is per-row.
+model ProductPrice {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  type        PriceType @default(fixed)
+  /// Decimal currency; Float is wrong for money.
+  price       Decimal?  @db.Decimal(14, 2)
+  currency    String    @default("RUB")
+  includesVat Boolean   @default(true) @map("includes_vat")
+  vatRate     Int       @default(20) @map("vat_rate")
+  /// Null upper bound means "and above".
+  volumeFrom  Int?      @map("volume_from")
+  volumeTo    Int?      @map("volume_to")
+  productId   String    @map("product_id") @db.Uuid
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade, map: "product_prices_product_id_fkey")
+
+  @@index([productId], map: "product_prices_product_id_idx")
+  @@index([type], map: "product_prices_type_idx")
+  @@map("product_prices")
+}
+
+enum PriceType {
+  fixed
+  on_request
+  volume
+
+  @@map("price_type")
+}
+
+// --- VENDORS (sellers) ---
+
+/// 1:1 with User. A user with role `vendor` has exactly one Vendor profile.
+model Vendor {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// Link to the auth user. One vendor profile per user.
+  userId       String    @unique(map: "vendors_user_id_key") @map("user_id") @db.Uuid
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "vendors_user_id_fkey")
+  companyName  String    @map("company_name")
+  inn          String    @unique(map: "vendors_inn_key")
+  ogrn         String?
+  description  String?
+  logo         String?
+  verified     Boolean   @default(false)
+  rating       Decimal   @default(0) @db.Decimal(3, 2)
+  totalDeals   Int       @default(0) @map("total_deals")
+  contactName  String?   @map("contact_name")
+  contactEmail String    @map("contact_email")
+  contactPhone String?   @map("contact_phone")
+  website      String?
+  address      String?
+  city         String?
+  products     Product[]
+  deals        Deal[]
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@index([verified], map: "vendors_verified_idx")
+  @@map("vendors")
+}
+
+// --- BUYERS ---
+
+/// 1:1 with User. A user with role `buyer` has exactly one Buyer profile.
+model Buyer {
+  id           String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId       String   @unique(map: "buyers_user_id_key") @map("user_id") @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "buyers_user_id_fkey")
+  companyName  String   @map("company_name")
+  inn          String   @unique(map: "buyers_inn_key")
+  ogrn         String?
+  contactName  String?  @map("contact_name")
+  contactEmail String   @map("contact_email")
+  contactPhone String?  @map("contact_phone")
+  address      String?
+  city         String?
+  deals        Deal[]
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("buyers")
+}
+
+// --- DEALS (broker pipeline) ---
+
+model Deal {
+  id              String        @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// Human-readable number, e.g. SD-2026-0001. Generated from a DB sequence,
+  /// not max+1, to avoid the original's race condition.
+  dealNumber      String        @unique(map: "deals_deal_number_key") @map("deal_number")
+  type            DealType
+  status          DealStatus    @default(new)
+  title           String
+  description     String?
+  productId       String?       @map("product_id") @db.Uuid
+  buyerId         String?       @map("buyer_id") @db.Uuid
+  vendorId        String?       @map("vendor_id") @db.Uuid
+  /// Broker is a User (role broker). In the original this field existed but was
+  /// never populated; here it is a real FK.
+  brokerId        String?       @map("broker_id") @db.Uuid
+  quantity        Int?
+  deliveryDate    DateTime?     @map("delivery_date")
+  deliveryAddress String?       @map("delivery_address")
+  totalAmount     Decimal?      @map("total_amount") @db.Decimal(16, 2)
+  currency        String        @default("RUB")
+  commission      Decimal?      @db.Decimal(16, 2)
+  notes           String?
+  product         Product?      @relation(fields: [productId], references: [id], map: "deals_product_id_fkey")
+  buyer           Buyer?        @relation(fields: [buyerId], references: [id], map: "deals_buyer_id_fkey")
+  vendor          Vendor?       @relation(fields: [vendorId], references: [id], map: "deals_vendor_id_fkey")
+  broker          User?         @relation("DealBroker", fields: [brokerId], references: [id], map: "deals_broker_id_fkey")
+  messages        DealMessage[]
+  history         DealHistory[]
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@index([status], map: "deals_status_idx")
+  @@index([vendorId], map: "deals_vendor_id_idx")
+  @@index([buyerId], map: "deals_buyer_id_idx")
+  @@index([brokerId], map: "deals_broker_id_idx")
+  @@index([dealNumber], map: "deals_deal_number_idx")
+  @@map("deals")
+}
+
+enum DealType {
+  rfq
+  specification
+  price_proposal
+  procurement
+
+  @@map("deal_type")
+}
+
+enum DealStatus {
+  new
+  verification
+  negotiation
+  proposal
+  connection
+  completed
+  cancelled
+
+  @@map("deal_status")
+}
+
+/// Persisted deal chat messages. The original kept these in-memory only; this
+/// table is what makes the chat survive a restart.
+model DealMessage {
+  id         String      @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  dealId     String      @map("deal_id") @db.Uuid
+  /// The User who sent it.
+  senderId   String      @map("sender_id") @db.Uuid
+  senderRole MessageRole @map("sender_role")
+  content    String
+  deal       Deal        @relation(fields: [dealId], references: [id], onDelete: Cascade, map: "deal_messages_deal_id_fkey")
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  @@index([dealId, createdAt], map: "deal_messages_deal_id_created_at_idx")
+  @@map("deal_messages")
+}
+
+enum MessageRole {
+  broker
+  vendor
+  buyer
+
+  @@map("message_role")
+}
+
+/// Deal audit trail. `action` is free-form but conventionally CREATED /
+/// STATUS_CHANGE / MESSAGE / etc.
+model DealHistory {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  dealId    String   @map("deal_id") @db.Uuid
+  action    String
+  userId    String?  @map("user_id") @db.Uuid
+  details   String?
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade, map: "deal_history_deal_id_fkey")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([dealId, createdAt], map: "deal_history_deal_id_created_at_idx")
+  @@map("deal_history")
+}
+
+/// Monotonic counter for deal numbers. One row per year; the POST /api/deals
+/// handler does `UPDATE ... SET next = next + 1 RETURNING next` atomically.
+model DealNumberSequence {
+  year Int @id
+  next Int @default(1)
+
+  @@map("deal_number_sequence")
 }

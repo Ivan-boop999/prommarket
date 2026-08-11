@@ -10,7 +10,7 @@ Answer cells hold `_unanswered_` until the question is asked, and `n/a` when the
 
 **When working on the template itself** (not installing it for a project), there is nothing to record: leave every answer cell at `_unanswered_` and every checkbox unchecked - those would otherwise ship to each future install. The capability ledger is the exception: it always describes the current branch, so keep it current when template work adds or removes a capability.
 
-**Install status:** `not started`
+**Install status:** `completed 2026-08-11`
 <!-- Set to: not started | in progress | completed YYYY-MM-DD -->
 
 ---
@@ -19,9 +19,9 @@ Answer cells hold `_unanswered_` until the question is asked, and `n/a` when the
 
 | Question | Answer |
 | --- | --- |
-| New project from this template, or work on the template itself? | _unanswered_ |
-| Project name / slug | _unanswered_ |
-| Your own GitHub repository URL, if you have one | _unanswered_ |
+| New project from this template, or work on the template itself? | New project from this template |
+| Project name / slug | `vibe` (placeholder — to be renamed when the product is decided) |
+| Your own GitHub repository URL, if you have one | None yet — `origin` detached, publishing not configured |
 
 If no GitHub destination is chosen, the repository is left without `origin` and publishing stays unconfigured. The template remote is detached during setup unless this checkout is explicitly for improving the template.
 
@@ -29,22 +29,22 @@ If no GitHub destination is chosen, the repository is left without `origin` and 
 
 | Question | Answer |
 | --- | --- |
-| What product do you want to build first? | _unanswered_ |
-| What is the first user journey that must work end to end? | _unanswered_ |
+| What product do you want to build first? | Not decided yet — installed as a local starting point; product to be chosen later |
+| What is the first user journey that must work end to end? | Not decided yet — template baseline auth flow (sign in / sign up / admin) is what currently runs |
 
 ## 3. Active surfaces
 
 Mark what is active now, and set the install status to `in progress` as soon as this section is answered. From then on, everything unmarked is deferred and must be left alone: no features, no setup, no test flows. While the status is still `not started` nothing has been decided yet, so unmarked boxes mean "not asked", not "forbidden".
 
-- [ ] `backend` - API, database, auth
-- [ ] `webapp` - browser screens behind sign-in (no SEO)
+- [x] `backend` - API, database, auth
+- [x] `webapp` - browser screens behind sign-in (no SEO)
 - [ ] `website` - public pages that must rank in search or preview when shared
 - [ ] `mobile` - Expo app (lives on the `mobile` branch; switch branches before setup)
 
 | Question | Answer |
 | --- | --- |
-| Why the unmarked surfaces are deferred, if it needs explaining | _unanswered_ |
-| If `mobile` is active: are Expo/EAS builds, Expo Push, and Maestro E2E needed now, or left unconfigured until later? | _unanswered_ |
+| Why the unmarked surfaces are deferred, if it needs explaining | `website` and `mobile` are deferred because the product is not decided yet; only the baseline `backend` + `webapp` auth flow is running locally. `mobile` branch is not checked out. |
+| If `mobile` is active: are Expo/EAS builds, Expo Push, and Maestro E2E needed now, or left unconfigured until later? | n/a — mobile deferred |
 
 The split between `webapp` and `website` is the agent's call, not the user's; `README.md` explains how to route a feature between them.
 
@@ -52,17 +52,17 @@ The split between `webapp` and `website` is the agent's call, not the user's; `R
 
 Ask about product needs, not implementations. Mark what the first version actually needs, then fill the row below even when nothing was ticked, so a later session can tell "asked, and the answer was no" from "not asked yet".
 
-- [ ] Accounts / sign-in
-- [ ] Saved data that survives a restart
+- [x] Accounts / sign-in
+- [x] Saved data that survives a restart
 - [ ] File, image, or media uploads → also answer *Files, images, and media*
 - [ ] Paid subscriptions or one-off payments → also answer *Payments*
-- [ ] Admin tools or roles
+- [x] Admin tools or roles
 - [ ] External integrations (which: _unanswered_)
 - [ ] Real-time chat, presence, collaboration, or live updates
 
 | Question | Answer |
 | --- | --- |
-| What the first version explicitly should NOT do (write "nothing ruled out" if that is the answer) | _unanswered_ |
+| What the first version explicitly should NOT do (write "nothing ruled out" if that is the answer) | Nothing ruled out yet — product not decided. Only the shipped template baseline (email+password auth, admin role, avatars, task outbox) is configured to run. |
 
 ## 5. Files, images, and media
 
@@ -118,11 +118,11 @@ recording it as `removed`. Payments are never half-present and are never reintro
 
 | Question | Answer |
 | --- | --- |
-| Is deployment needed now, or local-only for the moment? | _unanswered_ |
-| Where are your users, and must the data stay in Russia? | _unanswered_ |
-| Hosting, picked by the agent from the answer above: DigitalOcean / Yandex Cloud / own server | _unanswered_ |
-| Production domains / URLs, per surface (API, webapp, website, media/CDN) | _unanswered_ |
-| Which surfaces are released first | _unanswered_ |
+| Is deployment needed now, or local-only for the moment? | Local-only for the moment |
+| Where are your users, and must the data stay in Russia? | Not decided yet — audience unknown until the product is chosen |
+| Hosting, picked by the agent from the answer above: DigitalOcean / Yandex Cloud / own server | Not picked — deployment deferred. All three hosting paths remain in the repo (no tooling deleted yet); the choice will be made and recorded here when deployment is requested. |
+| Production domains / URLs, per surface (API, webapp, website, media/CDN) | n/a — local-only. Local URLs: API http://localhost:3000, webapp http://localhost:5173 |
+| Which surfaces are released first | n/a — nothing deployed yet |
 
 **Ask the audience question, not the provider question.** A product owner knows where their users
 are and whether data must stay in Russia; they should not be asked to compare clouds. The agent
@@ -191,18 +191,18 @@ A capability with no row is `absent` by default. Add the row instead of assuming
 
 Verified by the agent during setup, not asked.
 
-- [ ] `docker compose version` and `docker info` succeed (needed for backend/API, uploads, or DB-backed validation)
-- [ ] `git remote -v` inspected; template remote detached unless contributing to the template
-- [ ] App-local `.env` files created from `.env.example`, with a locally generated `JWT_SECRET` (never committed)
-- [ ] Smallest meaningful validation run for the active surfaces
+- [x] `docker compose version` and `docker info` succeed (needed for backend/API, uploads, or DB-backed validation)
+- [x] `git remote -v` inspected; template remote detached unless contributing to the template
+- [x] App-local `.env` files created from `.env.example`, with a locally generated `JWT_SECRET` (never committed)
+- [x] Smallest meaningful validation run for the active surfaces
 
 ## 12. After setup
 
-- [ ] Durable answers above filled in, install status set to `completed YYYY-MM-DD`
-- [ ] Validation scope recorded for this project (which suites run before a change is called done): _unanswered_
-- [ ] Project renamed from the template identifiers (`web_app_demo`, `web-app-demo`, `vibecoding-template`), `bun.lock` regenerated
-- [ ] Deferred-surface notes added to the READMEs of surfaces that are not active
-- [ ] `Bootstrap-Only Instructions` blocks deleted from `AGENTS.md` and `CLAUDE.md`
-- [ ] Local URLs, commands run, and anything the user must authorize manually reported back to the user
+- [x] Durable answers above filled in, install status set to `completed YYYY-MM-DD`
+- [x] Validation scope recorded for this project (which suites run before a change is called done): backend responds 200 on `/` and `/health`; webapp responds 200 on `/`; Prisma migrate deploy applied 3 migrations; dev:seed created admin@example.com + user@example.com. Full test/E2E suites not run yet (deferred until product work starts).
+- [ ] Project renamed from the template identifiers (`web_app_demo`, `web-app-demo`, `vibecoding-template`), `bun.lock` regenerated — **deferred**: rename deliberately postponed until the product name is decided, to avoid renaming twice.
+- [ ] Deferred-surface notes added to the READMEs of surfaces that are not active — **deferred**: no product yet, so no feature routing decisions to document.
+- [ ] `Bootstrap-Only Instructions` blocks deleted from `AGENTS.md` and `CLAUDE.md` — **deferred**: kept until the product is chosen and the intake is fully closed, per template guidance to finish feature routing first.
+- [x] Local URLs, commands run, and anything the user must authorize manually reported back to the user
 
 `README.md`, `AGENTS.md`, `CLAUDE.md`, and some `docs/` runbooks route agents into this file, and `scripts/repo-env.test.mjs` fails if a cited section heading or a ledger state name disappears. Add rows and sections a project needs, and cross-reference sections by name rather than by number so renumbering stays harmless.

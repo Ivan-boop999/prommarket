@@ -15,6 +15,29 @@ const navigationByRole = {
     { label: 'Users', to: '/admin/users' },
     { label: 'Settings', to: '/admin/settings' },
   ],
+  // Marketplace roles (ПромМаркет). These reuse the user workspace for now;
+  // dedicated vendor/broker/buyer/moderator destinations land in later
+  // iterations when the corresponding portals are built.
+  vendor: [
+    { label: 'Home', to: '/app' },
+    { label: 'Profile', to: '/app/profile' },
+    { label: 'Settings', to: '/app/settings' },
+  ],
+  broker: [
+    { label: 'Home', to: '/app' },
+    { label: 'Profile', to: '/app/profile' },
+    { label: 'Settings', to: '/app/settings' },
+  ],
+  buyer: [
+    { label: 'Home', to: '/app' },
+    { label: 'Profile', to: '/app/profile' },
+    { label: 'Settings', to: '/app/settings' },
+  ],
+  moderator: [
+    { label: 'Home', to: '/app' },
+    { label: 'Profile', to: '/app/profile' },
+    { label: 'Settings', to: '/app/settings' },
+  ],
 } as const satisfies Record<UserRole, ReadonlyArray<{ label: string; to: WorkspaceRoutePath }>>
 
 export function navigationItemsForRole(role: UserRole) {

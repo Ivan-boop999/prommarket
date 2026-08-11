@@ -15,7 +15,14 @@ export const passwordSchema = z
   .min(8, 'Password must be at least 8 characters')
   .max(128, 'Password must be at most 128 characters')
 
-export const userRoleSchema = z.enum(['user', 'admin'])
+export const userRoleSchema = z.enum([
+  'user',
+  'admin',
+  'vendor',
+  'broker',
+  'buyer',
+  'moderator',
+])
 
 export const userSchema = z.object({
   id: z.string(),
