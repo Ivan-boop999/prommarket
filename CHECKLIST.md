@@ -20,7 +20,7 @@ Answer cells hold `_unanswered_` until the question is asked, and `n/a` when the
 | Question | Answer |
 | --- | --- |
 | New project from this template, or work on the template itself? | New project from this template |
-| Project name / slug | `vibe` (placeholder — to be renamed when the product is decided) |
+| Project name / slug | `prommarket` — ПромМаркет, B2B-маркетплейс промышленного оборудования (переименование идентификаторов шаблона `web_app_demo` отложено) |
 | Your own GitHub repository URL, if you have one | None yet — `origin` detached, publishing not configured |
 
 If no GitHub destination is chosen, the repository is left without `origin` and publishing stays unconfigured. The template remote is detached during setup unless this checkout is explicitly for improving the template.
@@ -29,8 +29,8 @@ If no GitHub destination is chosen, the repository is left without `origin` and 
 
 | Question | Answer |
 | --- | --- |
-| What product do you want to build first? | Not decided yet — installed as a local starting point; product to be chosen later |
-| What is the first user journey that must work end to end? | Not decided yet — template baseline auth flow (sign in / sign up / admin) is what currently runs |
+| What product do you want to build first? | **ПромМаркет** — B2B-маркетплейс промышленного оборудования: каталог, RFQ-заявки, сделки через брокера, верификация поставщиков. Порт с Next.js/SQLite на архитектуру vibe. |
+| What is the first user journey that must work end to end? | Покупатель browses каталог → находит товар → оставляет RFQ-заявку → брокер ведёт сделку → оплата идёт напрямую (без платформы). Плюс вендор подписывается/верифицируется для размещения товаров. |
 
 ## 3. Active surfaces
 
@@ -54,15 +54,15 @@ Ask about product needs, not implementations. Mark what the first version actual
 
 - [x] Accounts / sign-in
 - [x] Saved data that survives a restart
-- [ ] File, image, or media uploads → also answer *Files, images, and media*
-- [ ] Paid subscriptions or one-off payments → also answer *Payments*
+- [x] File, image, or media uploads → also answer *Files, images, and media*
+- [x] Paid subscriptions or one-off payments → also answer *Payments*
 - [x] Admin tools or roles
 - [ ] External integrations (which: _unanswered_)
-- [ ] Real-time chat, presence, collaboration, or live updates
+- [x] Real-time chat, presence, collaboration, or live updates
 
 | Question | Answer |
 | --- | --- |
-| What the first version explicitly should NOT do (write "nothing ruled out" if that is the answer) | Nothing ruled out yet — product not decided. Only the shipped template baseline (email+password auth, admin role, avatars, task outbox) is configured to run. |
+| What the first version explicitly should NOT do (write "nothing ruled out" if that is the answer) | **No online card payments, no commission on sales (at least initially).** Payments are offline (bank transfer against an invoice, manual confirmation). No social auth (mobile line). No website/SSG (deferred). No mobile app (mobile branch, deferred). |
 
 ## 5. Files, images, and media
 
@@ -70,13 +70,13 @@ This project ships private file storage with user avatars, so answer these for t
 
 | Question | Answer |
 | --- | --- |
-| What do users upload? | _unanswered_ |
-| Public, private, shared with selected people, or mixed? | _unanswered_ |
-| Who can upload, view, replace, and delete? | _unanswered_ |
-| Maximum file size and allowed file types | _unanswered_ |
-| Do images need thumbnails, resizing, format conversion, compression, cropping, or moderation? | _unanswered_ |
-| How long do files live after the owning record is deleted? | _unanswered_ |
-| Should filenames be visible to users, or opaque? | _unanswered_ |
+| What do users upload? | Vendor verification documents (ИНН, ОГРН, лицензии, сертификаты ISO, регистрационные документы). Mostly PDF, some images. Plus vendor product images (existing catalog flow). |
+| Public, private, shared with selected people, or mixed? | Private — verification documents are visible only to the submitting vendor and moderators/admins. Product images are public (catalog). |
+| Who can upload, view, replace, and delete? | Vendor uploads their own verification docs; moderators/admins view during review. Product images: vendor owns, public views. |
+| Maximum file size and allowed file types | Verification docs: up to 10MB, PDF + JPEG/PNG (PDF support pending uploads-module extension — currently only JPEG/PNG/HEIC). Product images: 5MB, JPEG/PNG/HEIC (existing). |
+| Do images need thumbnails, resizing, format conversion, compression, cropping, or moderation? | Product images: no transform today (served as-is). Verification docs: no transform; moderation is human review of content, not image processing. |
+| How long do files live after the owning record is deleted? | Verification docs live with the request; deleted when the request is deleted (Cascade). Product images live with the product. |
+| Should filenames be visible to users, or opaque? | Opaque — storage object keys are backend-generated UUIDs (no personal data), per the existing upload contract. The display filename is stored on the document row. |
 
 ## 6. Website data and freshness
 
@@ -96,15 +96,15 @@ freshness or personalization cannot be met by rebuild/redeploy.
 
 ## 7. Payments
 
-Answer these only when payments are active above; otherwise mark the rows `n/a`. Keep the section either way, and replace the `n/a` answers if payments are added later.
+**Decision recorded 2026-08-11:** ПромМаркет does **NOT** process online card payments and does **NOT** take a sales commission (at least initially). Monetization is offline-billed: vendors pay for subscriptions, lead credits, verification, featured placement, and SaaS add-ons via bank transfer against an issued `Invoice`; an admin confirms receipt manually. Brokers earn a success-fee on closed deals, also settled offline.
 
 | Question | Answer |
 | --- | --- |
-| What exactly do users pay for? | _unanswered_ |
-| Recurring subscription, one-off purchase, or both? | _unanswered_ |
-| Does the public website need a local cart or offer selection before registration/sign-in? | _unanswered_ |
-| Which active surfaces need payment: browser checkout, App Store / Google Play, native card entry, Apple Pay, or Google Pay? | _unanswered_ |
-| What stops working when someone does not pay? | _unanswered_ |
+| What exactly do users pay for? | Vendor subscriptions (tiered plans), lead credits (RFQ unlock), verified-supplier status, featured product placement, SaaS add-ons (CRM/analytics/API/tenders), broker success-fee on closed deals. |
+| Recurring subscription, one-off purchase, or both? | Both: recurring subscriptions (monthly/yearly) + one-off purchases (credit packs, featured periods, add-on activations, per-deal broker fees). |
+| Does the public website need a local cart or offer selection before registration/sign-in? | No — `website` is deferred. The catalog is public and browseable; all monetized actions happen behind vendor/broker sign-in in `webapp`. |
+| Which active surfaces need payment: browser checkout, App Store / Google Play, native card entry, Apple Pay, or Google Pay? | **None.** No card entry, no Apple/Google Pay, no App Store/Play IAP. Payment is bank transfer against an invoice, confirmed manually. |
+| What stops working when someone does not pay? | A vendor without an active subscription cannot list beyond the free tier; without credits cannot unlock RFQ contacts; without verification cannot display the trust badge; featured placements lapse on expiry. Broker fees are tracked but enforced contractually, not by the platform. |
 
 Whatever this project ends up with, the ledger below is what states it. Read `docs/WEB_SURFACES.md`
 before implementing any payment surface. Browser checkout is built in authenticated `webapp` plus
@@ -180,12 +180,19 @@ A capability with no row is `absent` by default. Add the row instead of assuming
 | Website build-time backend data | absent | The baseline landing content is repository-owned; add a shared public DTO and build fetch only when `website` needs database-backed information. |
 | Automatic SSG rebuild | absent | Durable desired/published revision state, single-flight deployment reconciliation, immutable atomic/blue-green release promotion, public-marker verification, and a provider adapter are not implemented. Yandex additionally needs a separate builder/upload component. See `docs/WEB_SURFACES.md`. |
 | Website cart handoff | absent | No local cart or cross-origin handoff exists on the default branch. When activated, it feeds the one authenticated browser checkout defined in `docs/WEB_SURFACES.md`. |
-| Browser checkout / payments | absent | No browser checkout or payment code exists. Build it in `webapp` plus the backend, never in `website`. Store subscriptions come from the mobile template line. |
+| Browser checkout / payments | removed | **By product decision (2026-08-11): no online card payments, ever.** ПромМаркет bills offline via `Invoice` + manual confirmation. Do NOT reintroduce a card-based browser checkout or payment SDK. Monetization flows (subscriptions, credits, verification, featured, add-ons, broker fees) live in `webapp` + backend behind their own modules. |
+| Marketplace catalog (public) | included | `modules/catalog/` + `webapp/features/catalog/`. Categories tree, products with server-side EAV filtering, vendors, search. Iteration 2. |
+| Subscriptions (vendor tariffs) | included | `modules/subscriptions/` + `webapp/features/monetization/`. Tiered plans (free/basic/pro/enterprise), offline billing via invoice + manual confirmation, included lead credits granted on activation. |
+| Lead credits (RFQ unlock) | included | `modules/leads/` + advisory-locked ledger. Balance = SUM(delta); atomic unlock under `pg_advisory_xact_lock`. |
+| Vendor verification | included | `modules/verification/` + documents. Status state machine (draft→submitted→under_review→approved/rejected). `Vendor.verificationTier` (none/basic/pro) drives the catalog badge. Moderator role reviews. Document upload (PDF) pending uploads-module extension. |
+| Featured placement | included | `modules/billing/` featured sub-flow. `Product.featuredUntil` denormalized for catalog boost. Invoiced + confirmed like subscriptions. |
+| SaaS add-ons (CRM/analytics/API/tenders) | included | `modules/billing/` add-on sub-flow. `VendorAddOn` with pending/active/disabled/expired lifecycle. |
+| Broker success-fee | included | `modules/broker/` + `BrokerFeeLedger`. Accrued on deal completion ( Deal.commission denormalized), invoiced, paid — all offline. Stats dashboard for brokers. |
 | Push notifications | absent | No push code here. Expo Push comes from the mobile template line. |
 | Social sign-in (Apple / Google) | absent | No social auth here. It comes from the mobile template line. |
-| Real-time / WebSockets | absent | Requires an explicit product need. |
-| Background jobs | included | Jobs live in `backend/src/jobs.ts` and include `auth:sessions:cleanup`, `uploads:pending:cleanup`, and `outbox:drain`. The shipped `schedules` in `backend/src/scheduler.ts` runs `outbox:drain` every minute, and `bun run dev` starts that process alongside the API. Deploying it is still a choice - a DigitalOcean worker component, a Yandex VM, or systemd - and nothing runs on a timer in production until you do. `auth:sessions:cleanup` needs a schedule of its own or stale sessions and expired reset tokens are never deleted. `workerLoops` stays empty. See `docs/BACKGROUND_JOBS.md`. |
-| Durable task outbox | included | `task_outbox` in PostgreSQL with handlers in `backend/src/outbox/handlers.ts`, drained by `outbox:drain`. Ships with the password-reset emails as its only producers, and stays empty until something enqueues. Adding a task type is a code change, never a migration. |
+| Real-time / WebSockets | absent | Requires an explicit product need. (Iteration 5 will add deal chat WS.) |
+| Background jobs | included | Jobs live in `backend/src/jobs.ts` and include `auth:sessions:cleanup`, `uploads:pending:cleanup`, `outbox:drain`, plus `subscriptions:scan-expiring` and `verification:expire-sweep` (daily). Deploying it is still a choice - a DigitalOcean worker component, a Yandex VM, or systemd - and nothing runs on a timer in production until you do. |
+| Durable task outbox | included | `task_outbox` in PostgreSQL with handlers in `backend/src/outbox/handlers.ts`, drained by `outbox:drain`. Producers: password-reset emails + 7 monetization notification task types (placeholder stubs that log + return 'skipped' until email templates are wired). |
 
 ## 11. Environment checks
 

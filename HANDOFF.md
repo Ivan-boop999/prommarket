@@ -10,6 +10,62 @@
 
 Переписываем **ПромМаркет** (B2B маркетплейс промышленного оборудования) с Next.js/SQLite на архитектуру vibe-шаблона (Bun/Hono/Prisma/PostgreSQL для бэкенда, React+Vite+TanStack для фронтенда). Оригинальный ПромМаркет был сделан в другом инструменте (Next.js 16, ~30k строк, частично «фасадный» — моковая auth, чат без сохранения, EAV-фильтры только клиентские). Цель — **полноценный продукт**, а не 1-в-1 порт: вылечиваем главные дыры оригинала. Работа разбита на 7 итераций, каждая даёт запускаемый результат.
 
+---
+
+## 🔥 ОБНОВЛЕНИЕ (сессия 2026-08-11, коммиты `3250bf2` + `9844099`)
+
+### ✅ Монетизация — 6 моделей, полный backend + webapp
+
+По решению владельца: **БЕЗ онлайн-платежей картой, БЕЗ комиссии с продаж (пока).**
+Все деньги идут офлайн — счёт (Invoice) → банковский перевод → ручное подтверждение менеджером.
+
+Реализованы все 6 моделей из исследования (кроме рекламы — отдельно решено не делать):
+
+| # | Модель | Backend | Webapp | Статус |
+|---|---|---|---|---|
+| 1 | **Подписки (тарифы)** | `modules/subscriptions/` | `/vendor/billing` | ✅ full |
+| 2 | **Лид-кредиты (RFQ unlock)** | `modules/leads/` (advisory lock) | `/vendor/credits` | ✅ full |
+| 3 | **Featured-размещение** | `modules/billing/` featured | `/vendor/featured` | ✅ full |
+| 4 | **Верификация поставщика** | `modules/verification/` | `/vendor/verify`, `/admin/verification` | ✅ full (кроме PDF-аплоада) |
+| 5 | **Broker success-fee** | `modules/broker/` + `BrokerFeeLedger` | `/broker/fees` | ✅ full |
+| 6 | **SaaS-аддоны** | `modules/billing/` add-ons | `/vendor/add-ons` | ✅ full |
+
+**Schema** (`schema.prisma`): 10 новых моделей + `VerificationTier` enum, `Product.featuredUntil`, `Vendor.verificationTier`. Миграция `20260811160000_monetization` — SQL генерируется через `prisma migrate diff` (README в папке миграции; Bun должен быть установлен).
+
+**Контракты** (`packages/contracts/src/billing.ts`): все Zod-схемы и типы, re-export из `index.ts`.
+
+**Routing**: 4 новых workspace-layout'а (vendor/broker/buyer/moderator) + admin children (`/admin/verification`, `/admin/billing`). `navigation/model.ts` полностью переписан под роли ПромМаркета. `createRequireRole` обобщён до `UserRole | UserRole[]`.
+
+**Outbox**: 7 новых monetization task types (placeholder stubs — логируют + return 'skipped', пока нет email-шаблонов). 2 recurring jobs: `subscriptions:scan-expiring`, `verification:expire-sweep`.
+
+### ⏳ Что осталось сделать (изначальные итерации 3-7)
+
+| Итерация | Статус | Что делать |
+|---|---|---|
+| **3.** Главная страница + RFQ | НЕ НАЧАТО | `features/home/`, hero + категории + featured + RFQ-форма. Backend уже есть (`?sort=views`). |
+| **4.** Auth-скрещивание + cart/favorites | ЧАСТИЧНО | Роуты и role-redirect уже работают. Cart/favorites/compare — НЕ сделано (команда против Zustand; через URL params + TanStack Query). |
+| **5.** Сделки + WS-чат | НЕ НАЧАТО | `modules/deals/` + WebSocket на `Bun.serve`. `DEAL_STATUS_TRANSITIONS` уже в контрактах. |
+| **6.** Порталы vendor/broker/admin CRUD | ЧАСТИЧНО | Кабинеты есть (UI-оболочки), но CRUD товаров вендором и управление категориями — НЕ сделано. |
+| **7.** Полировка | НЕ НАЧАТО | analytics, reviews, notifications. |
+
+### ⚠️ Что нужно сделать ПЕРЕД запуском
+
+1. **Установить Bun** (`irm bun.sh/install.ps1 | iex`) — без него не запустится ничего.
+2. **Запустить Docker Desktop** (демон не поднят) — для PostgreSQL 18 на порту 54329.
+3. `bun install` — установит зависимости и сгенерирует `node_modules`.
+4. `bun run --cwd backend prisma:generate` — регенерирует Prisma-клиент с новыми monetization-моделями.
+5. Сгенерировать + применить миграцию (см. `backend/prisma/migrations/20260811160000_monetization/README.md`).
+6. `bun run --cwd backend scripts/seed-marketplace.ts` — seed расширён: 4 тарифа, подписки, кредиты, верификации, invoice.
+7. `bun run typecheck` — проверить, что типы сходятся (я не мог запустить без Bun).
+
+### 🐛 Известные TODO (не блокируют запуск)
+
+- **PDF-аплоад для верификации**: `uploads` module сейчас принимает только JPEG/PNG/HEIC. Нужно расширить magic-byte check на PDF + новый upload-kind. Verification documents хранят objectKey как строку, но реальная загрузка через uploads-module пока не работает для PDF.
+- **Tier-разные бейджи в каталоге**: `vendorVerified` boolean уже работает (✓ Проверен), но basic vs pro с разными цветами — нужно расширить `vendorSummarySchema` в контрактах.
+- **Email-уведомления monetization**: 7 outbox task types — это stubs (логируют, не шлют). Реальная отправка — по образцу `auth:password-reset` когда будут шаблоны писем.
+- **`homePathForRole` возвращает `string`** (не `'/app' | '/admin'`) — расширил для новых ролей, но `pages.tsx:WorkspaceRoute` и `GuestAuthPage` используют его как строку, ОК.
+
+
 ## Что уже сделано (коммиты в `git log`)
 
 ### ✅ Итерация 1 — Фундамент (коммит `6f0c41b`)

@@ -30,6 +30,15 @@ async function main() {
 
   // Clear marketplace tables in dependency order. Auth users created here are
   // also removed so the seed is idempotent across reruns.
+  await db.brokerFeeLedger.deleteMany()
+  await db.vendorAddOn.deleteMany()
+  await db.featuredPlacement.deleteMany()
+  await db.leadCreditLedger.deleteMany()
+  await db.verificationDocument.deleteMany()
+  await db.verificationRequest.deleteMany()
+  await db.vendorSubscription.deleteMany()
+  await db.invoice.deleteMany()
+  await db.invoiceNumberSequence.deleteMany()
   await db.dealHistory.deleteMany()
   await db.dealMessage.deleteMany()
   await db.deal.deleteMany()
@@ -114,7 +123,7 @@ async function main() {
         userId: vendorUsers[0].id,
         companyName: 'ООО «ПромТехника»', inn: '7712345678', ogrn: '1177700000001',
         description: 'Крупнейший поставщик промышленного двигателестроительного оборудования. Более 15 лет на рынке.',
-        verified: true, rating: 4.8, totalDeals: 234,
+        verified: true, verificationTier: 'pro', rating: 4.8, totalDeals: 234,
         contactName: 'Иванов Алексей Петрович', contactEmail: 'info@promtechnika.ru', contactPhone: '+7 (495) 123-45-67', city: 'Москва',
       },
     }),
@@ -123,7 +132,7 @@ async function main() {
         userId: vendorUsers[1].id,
         companyName: 'АО «ЭнергоМаш»', inn: '7709876543', ogrn: '1027700000002',
         description: 'Производитель и поставщик насосного оборудования для нефтегазовой промышленности.',
-        verified: true, rating: 4.6, totalDeals: 178,
+        verified: true, verificationTier: 'pro', rating: 4.6, totalDeals: 178,
         contactName: 'Петрова Мария Ивановна', contactEmail: 'sales@energomash.ru', contactPhone: '+7 (812) 234-56-78', city: 'Санкт-Петербург',
       },
     }),
@@ -132,7 +141,7 @@ async function main() {
         userId: vendorUsers[2].id,
         companyName: 'ИП Козлов С.А.', inn: '501234567890', ogrn: '3185000000003',
         description: 'Поставщик б/у и восстановленного промышленного оборудования.',
-        verified: true, rating: 4.3, totalDeals: 89,
+        verified: true, verificationTier: 'basic', rating: 4.3, totalDeals: 89,
         contactName: 'Козлов Сергей Андреевич', contactEmail: 'kozlov@used-prom.ru', contactPhone: '+7 (4852) 34-56-78', city: 'Ярославль',
       },
     }),
@@ -141,7 +150,7 @@ async function main() {
         userId: vendorUsers[3].id,
         companyName: 'ООО «Компрессорный мир»', inn: '7312345678', ogrn: '1157300000004',
         description: 'Специализированный поставщик компрессорного оборудования.',
-        verified: true, rating: 4.7, totalDeals: 156,
+        verified: true, verificationTier: 'basic', rating: 4.7, totalDeals: 156,
         contactName: 'Смирнов Дмитрий Николаевич', contactEmail: 'info@comp-mir.ru', contactPhone: '+7 (727) 123-45-67', city: 'Новосибирск',
       },
     }),
@@ -302,6 +311,72 @@ async function main() {
     }),
   ])
 
+  // ==================== MONETIZATION ====================
+  // Reference data + demo state for the six offline-billed monetization models.
+  // All amounts are RUB; no online payments — invoices await manual confirmation.
+  console.log('  monetization (plans, subscriptions, credits, verification, fees)…')
+
+  // --- Subscription plans (Модель 1) ---
+  const plans = await Promise.all([
+    db.subscriptionPlan.create({ data: {
+      code: 'free', name: 'Старт', description: 'Бесплатный тариф для начала работы.',
+      price: 0, currency: 'RUB', billingPeriod: 'monthly', maxProducts: 10,
+      includedLeadCredits: 5, hasFeatured: false, hasPrioritySupport: false, isActive: true, sortOrder: 1,
+    } }),
+    db.subscriptionPlan.create({ data: {
+      code: 'basic_monthly', name: 'Базовый', description: 'Расширенный каталог и базовые инструменты.',
+      price: 1500, currency: 'RUB', billingPeriod: 'monthly', maxProducts: 100,
+      includedLeadCredits: 20, hasFeatured: false, hasPrioritySupport: false, isActive: true, sortOrder: 2,
+    } }),
+    db.subscriptionPlan.create({ data: {
+      code: 'pro_yearly', name: 'Про', description: 'Профессиональный тариф с продвижением и приоритетом.',
+      price: 32000, currency: 'RUB', billingPeriod: 'yearly', maxProducts: 10000,
+      includedLeadCredits: 200, hasFeatured: true, hasPrioritySupport: true, isActive: true, sortOrder: 3,
+    } }),
+    db.subscriptionPlan.create({ data: {
+      code: 'enterprise_yearly', name: 'Enterprise', description: 'Безлимитный каталог и персональный менеджер.',
+      price: 45000, currency: 'RUB', billingPeriod: 'yearly', maxProducts: null,
+      includedLeadCredits: 1000, hasFeatured: true, hasPrioritySupport: true, isActive: true, sortOrder: 4,
+    } }),
+  ])
+
+  // --- Vendor subscriptions ---
+  const now = new Date()
+  const periodEndPro = new Date(now.getTime() + 320 * 24 * 60 * 60 * 1000)
+  const periodEndBasic = new Date(now.getTime() + 25 * 24 * 60 * 60 * 1000)
+  await db.vendorSubscription.create({ data: {
+    vendorId: vendors[0].id, planId: plans[2].id, status: 'active',
+    periodStart: now, periodEnd: periodEndPro, amount: 32000, currency: 'RUB',
+  } })
+  await db.vendorSubscription.create({ data: {
+    vendorId: vendors[1].id, planId: plans[2].id, status: 'active',
+    periodStart: now, periodEnd: periodEndPro, amount: 32000, currency: 'RUB',
+  } })
+  await db.vendorSubscription.create({ data: {
+    vendorId: vendors[3].id, planId: plans[1].id, status: 'active',
+    periodStart: now, periodEnd: periodEndBasic, amount: 1500, currency: 'RUB',
+  } })
+
+  // --- Lead credits (Модель 2): opening balances ---
+  await db.leadCreditLedger.create({ data: { vendorId: vendors[0].id, delta: 200, reason: 'subscription_grant', balanceAfter: 200 } })
+  await db.leadCreditLedger.create({ data: { vendorId: vendors[1].id, delta: 200, reason: 'subscription_grant', balanceAfter: 200 } })
+  await db.leadCreditLedger.create({ data: { vendorId: vendors[2].id, delta: 50, reason: 'purchase', balanceAfter: 50 } })
+  await db.leadCreditLedger.create({ data: { vendorId: vendors[3].id, delta: 20, reason: 'subscription_grant', balanceAfter: 20 } })
+
+  // --- Verification requests (Модель 4): mixed statuses ---
+  await db.verificationRequest.create({ data: {
+    vendorId: vendors[4].id, status: 'submitted', requestedTier: 'pro',
+    contactName: 'Кузнецова Ольга Владимировна', contactPhone: '+7 (343) 234-56-78',
+    message: 'Просим рассмотреть заявку на статус Pro.', submittedAt: now,
+  } })
+  // A pending invoice for a lead-credit purchase to show in admin/billing.
+  await db.invoice.create({ data: {
+    number: 'INV-2026-0001', type: 'lead_credits', payerType: 'vendor',
+    payerUserId: vendors[2].userId, vendorId: vendors[2].id,
+    amount: 5000, currency: 'RUB', status: 'issued', issuedAt: now,
+    items: [{ description: 'Покупка 50 лид-кредитов', quantity: 50, unitPrice: '100', total: '5000' }],
+  } })
+
   console.log('✅ Marketplace seed complete!')
   console.log(`   Categories: ${await db.category.count()}`)
   console.log(`   Attributes: ${await db.attribute.count()}`)
@@ -309,6 +384,10 @@ async function main() {
   console.log(`   Buyers:     ${await db.buyer.count()}`)
   console.log(`   Products:   ${await db.product.count()}`)
   console.log(`   Demo users: ${await db.user.count({ where: { email: { endsWith: '@prommarket.demo' } } })} (password: "${DEMO_PASSWORD}")`)
+  console.log(`   Subscriptions: ${await db.vendorSubscription.count()} | Plans: ${await db.subscriptionPlan.count()}`)
+  console.log(`   Lead credits ledger entries: ${await db.leadCreditLedger.count()}`)
+  console.log(`   Verification requests: ${await db.verificationRequest.count()}`)
+  console.log(`   Invoices: ${await db.invoice.count()}`)
 }
 
 main()
