@@ -22,6 +22,19 @@ import {
 } from '@/features/auth'
 import { homePathForRole, safeReturnPath } from '@/features/navigation'
 import { UserHome, UserProfile, UserSettings } from '@/features/users'
+import {
+  AdminBillingPanel,
+  AdminVerificationPanel,
+  BrokerFeesPanel,
+  BrokerHomePanel,
+  BuyerHomePanel,
+  VendorAddOnsPanel,
+  VendorBillingPanel,
+  VendorCreditsPanel,
+  VendorFeaturedPanel,
+  VendorHomePanel,
+  VendorVerifyPanel,
+} from '@/features/monetization'
 
 export function HomePage() {
   const auth = useAuth()
@@ -117,12 +130,86 @@ export function AdminSettingsPage() {
   return <AdminSettings user={user} />
 }
 
+export function AdminVerificationPage() {
+  return <AdminVerificationPanel />
+}
+
+export function AdminBillingPage() {
+  return <AdminBillingPanel />
+}
+
+// --- Vendor pages ---
+
+export function VendorHomePage() {
+  const user = useWorkspaceUser('vendor')
+  return <VendorHomePanel user={user} />
+}
+
+export function VendorBillingPage() {
+  return <VendorBillingPanel />
+}
+
+export function VendorCreditsPage() {
+  return <VendorCreditsPanel />
+}
+
+export function VendorVerifyPage() {
+  return <VendorVerifyPanel />
+}
+
+export function VendorFeaturedPage() {
+  return <VendorFeaturedPanel />
+}
+
+export function VendorAddOnsPage() {
+  return <VendorAddOnsPanel />
+}
+
+// --- Broker pages ---
+
+export function BrokerHomePage() {
+  return <BrokerHomePanel />
+}
+
+export function BrokerFeesPage() {
+  return <BrokerFeesPanel />
+}
+
+// --- Buyer page ---
+
+export function BuyerHomePage() {
+  const user = useWorkspaceUser('buyer')
+  return <BuyerHomePanel user={user} />
+}
+
+// --- Moderator page ---
+
+export function ModeratorVerificationPage() {
+  return <AdminVerificationPanel />
+}
+
 export function UserWorkspaceLayout() {
   return <WorkspaceRoute role="user" />
 }
 
 export function AdminWorkspaceLayout() {
   return <WorkspaceRoute role="admin" />
+}
+
+export function VendorWorkspaceLayout() {
+  return <WorkspaceRoute role="vendor" />
+}
+
+export function BrokerWorkspaceLayout() {
+  return <WorkspaceRoute role="broker" />
+}
+
+export function BuyerWorkspaceLayout() {
+  return <WorkspaceRoute role="buyer" />
+}
+
+export function ModeratorWorkspaceLayout() {
+  return <WorkspaceRoute role="moderator" />
 }
 
 export function NotFoundPage() {

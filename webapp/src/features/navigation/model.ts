@@ -1,51 +1,78 @@
 import type { UserRole } from '@web-app-demo/contracts'
 
 export type UserRoutePath = '/app' | '/app/profile' | '/app/settings'
-export type AdminRoutePath = '/admin' | '/admin/users' | '/admin/settings'
-export type WorkspaceRoutePath = UserRoutePath | AdminRoutePath
+export type AdminRoutePath = '/admin' | '/admin/users' | '/admin/settings' | '/admin/verification' | '/admin/billing'
+export type VendorRoutePath =
+  | '/vendor'
+  | '/vendor/billing'
+  | '/vendor/credits'
+  | '/vendor/verify'
+  | '/vendor/featured'
+  | '/vendor/add-ons'
+export type BrokerRoutePath = '/broker' | '/broker/fees'
+export type BuyerRoutePath = '/buyer'
+export type ModeratorRoutePath = '/moderator/verification'
+export type WorkspaceRoutePath =
+  | UserRoutePath
+  | AdminRoutePath
+  | VendorRoutePath
+  | BrokerRoutePath
+  | BuyerRoutePath
+  | ModeratorRoutePath
 
 const navigationByRole = {
   user: [
-    { label: 'Home', to: '/app' },
-    { label: 'Profile', to: '/app/profile' },
-    { label: 'Settings', to: '/app/settings' },
+    { label: 'Главная', to: '/app' },
+    { label: 'Профиль', to: '/app/profile' },
+    { label: 'Настройки', to: '/app/settings' },
   ],
   admin: [
-    { label: 'Dashboard', to: '/admin' },
-    { label: 'Users', to: '/admin/users' },
-    { label: 'Settings', to: '/admin/settings' },
+    { label: 'Дашборд', to: '/admin' },
+    { label: 'Пользователи', to: '/admin/users' },
+    { label: 'Верификация', to: '/admin/verification' },
+    { label: 'Биллинг', to: '/admin/billing' },
+    { label: 'Настройки', to: '/admin/settings' },
   ],
-  // Marketplace roles (ПромМаркет). These reuse the user workspace for now;
-  // dedicated vendor/broker/buyer/moderator destinations land in later
-  // iterations when the corresponding portals are built.
+  // Marketplace roles (ПромМаркет). Each now has its own workspace shell with
+  // role-appropriate destinations; the vendor portal is the richest because
+  // subscriptions, lead credits, verification, featured, and add-ons all live
+  // there.
   vendor: [
-    { label: 'Home', to: '/app' },
-    { label: 'Profile', to: '/app/profile' },
-    { label: 'Settings', to: '/app/settings' },
+    { label: 'Кабинет', to: '/vendor' },
+    { label: 'Подписка', to: '/vendor/billing' },
+    { label: 'Лид-кредиты', to: '/vendor/credits' },
+    { label: 'Верификация', to: '/vendor/verify' },
+    { label: 'Продвижение', to: '/vendor/featured' },
+    { label: 'Модули', to: '/vendor/add-ons' },
   ],
   broker: [
-    { label: 'Home', to: '/app' },
-    { label: 'Profile', to: '/app/profile' },
-    { label: 'Settings', to: '/app/settings' },
+    { label: 'Сделки', to: '/broker' },
+    { label: 'Комиссии', to: '/broker/fees' },
   ],
-  buyer: [
-    { label: 'Home', to: '/app' },
-    { label: 'Profile', to: '/app/profile' },
-    { label: 'Settings', to: '/app/settings' },
-  ],
-  moderator: [
-    { label: 'Home', to: '/app' },
-    { label: 'Profile', to: '/app/profile' },
-    { label: 'Settings', to: '/app/settings' },
-  ],
+  buyer: [{ label: 'Кабинет', to: '/buyer' }],
+  moderator: [{ label: 'Верификация', to: '/moderator/verification' }],
 } as const satisfies Record<UserRole, ReadonlyArray<{ label: string; to: WorkspaceRoutePath }>>
 
 export function navigationItemsForRole(role: UserRole) {
   return navigationByRole[role]
 }
 
-export function homePathForRole(role: UserRole): '/app' | '/admin' {
-  return role === 'admin' ? '/admin' : '/app'
+export function homePathForRole(role: UserRole): string {
+  switch (role) {
+    case 'admin':
+      return '/admin'
+    case 'vendor':
+      return '/vendor'
+    case 'broker':
+      return '/broker'
+    case 'buyer':
+      return '/buyer'
+    case 'moderator':
+      return '/moderator/verification'
+    case 'user':
+    default:
+      return '/app'
+  }
 }
 
 export function resolveRoleDestination(
@@ -53,7 +80,7 @@ export function resolveRoleDestination(
   pathname: string,
 ): WorkspaceRoutePath {
   const match = navigationItemsForRole(role).find((item) => item.to === pathname)
-  return match?.to ?? homePathForRole(role)
+  return match?.to ?? (homePathForRole(role) as WorkspaceRoutePath)
 }
 
 export function safeReturnPath(role: UserRole, value: string | undefined): string | null {

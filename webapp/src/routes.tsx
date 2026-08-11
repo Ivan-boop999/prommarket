@@ -111,6 +111,106 @@ const adminSettingsRoute = createRoute({
   component: lazyRouteComponent(() => import('./pages'), 'AdminSettingsPage'),
 })
 
+const adminVerificationRoute = createRoute({
+  getParentRoute: () => adminWorkspaceRoute,
+  path: '/admin/verification',
+  component: lazyRouteComponent(() => import('./pages'), 'AdminVerificationPage'),
+})
+
+const adminBillingRoute = createRoute({
+  getParentRoute: () => adminWorkspaceRoute,
+  path: '/admin/billing',
+  component: lazyRouteComponent(() => import('./pages'), 'AdminBillingPage'),
+})
+
+// Vendor workspace — subscriptions, lead credits, verification, featured, add-ons.
+const vendorWorkspaceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'vendorWorkspace',
+  component: lazyRouteComponent(() => import('./pages'), 'VendorWorkspaceLayout'),
+})
+
+const vendorHomeRoute = createRoute({
+  getParentRoute: () => vendorWorkspaceRoute,
+  path: '/vendor',
+  component: lazyRouteComponent(() => import('./pages'), 'VendorHomePage'),
+})
+
+const vendorBillingRoute = createRoute({
+  getParentRoute: () => vendorWorkspaceRoute,
+  path: '/vendor/billing',
+  component: lazyRouteComponent(() => import('./pages'), 'VendorBillingPage'),
+})
+
+const vendorCreditsRoute = createRoute({
+  getParentRoute: () => vendorWorkspaceRoute,
+  path: '/vendor/credits',
+  component: lazyRouteComponent(() => import('./pages'), 'VendorCreditsPage'),
+})
+
+const vendorVerifyRoute = createRoute({
+  getParentRoute: () => vendorWorkspaceRoute,
+  path: '/vendor/verify',
+  component: lazyRouteComponent(() => import('./pages'), 'VendorVerifyPage'),
+})
+
+const vendorFeaturedRoute = createRoute({
+  getParentRoute: () => vendorWorkspaceRoute,
+  path: '/vendor/featured',
+  component: lazyRouteComponent(() => import('./pages'), 'VendorFeaturedPage'),
+})
+
+const vendorAddOnsRoute = createRoute({
+  getParentRoute: () => vendorWorkspaceRoute,
+  path: '/vendor/add-ons',
+  component: lazyRouteComponent(() => import('./pages'), 'VendorAddOnsPage'),
+})
+
+// Broker workspace — deals + commissions.
+const brokerWorkspaceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'brokerWorkspace',
+  component: lazyRouteComponent(() => import('./pages'), 'BrokerWorkspaceLayout'),
+})
+
+const brokerHomeRoute = createRoute({
+  getParentRoute: () => brokerWorkspaceRoute,
+  path: '/broker',
+  component: lazyRouteComponent(() => import('./pages'), 'BrokerHomePage'),
+})
+
+const brokerFeesRoute = createRoute({
+  getParentRoute: () => brokerWorkspaceRoute,
+  path: '/broker/fees',
+  component: lazyRouteComponent(() => import('./pages'), 'BrokerFeesPage'),
+})
+
+// Buyer workspace.
+const buyerWorkspaceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'buyerWorkspace',
+  component: lazyRouteComponent(() => import('./pages'), 'BuyerWorkspaceLayout'),
+})
+
+const buyerHomeRoute = createRoute({
+  getParentRoute: () => buyerWorkspaceRoute,
+  path: '/buyer',
+  component: lazyRouteComponent(() => import('./pages'), 'BuyerHomePage'),
+})
+
+// Moderator workspace — verification queue.
+const moderatorWorkspaceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'moderatorWorkspace',
+  component: lazyRouteComponent(() => import('./pages'), 'ModeratorWorkspaceLayout'),
+})
+
+const moderatorVerificationRoute = createRoute({
+  getParentRoute: () => moderatorWorkspaceRoute,
+  path: '/moderator/verification',
+  component: lazyRouteComponent(() => import('./pages'), 'ModeratorVerificationPage'),
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -127,8 +227,21 @@ const routeTree = rootRoute.addChildren([
   adminWorkspaceRoute.addChildren([
     adminDashboardRoute,
     adminUsersRoute,
+    adminVerificationRoute,
+    adminBillingRoute,
     adminSettingsRoute,
   ]),
+  vendorWorkspaceRoute.addChildren([
+    vendorHomeRoute,
+    vendorBillingRoute,
+    vendorCreditsRoute,
+    vendorVerifyRoute,
+    vendorFeaturedRoute,
+    vendorAddOnsRoute,
+  ]),
+  brokerWorkspaceRoute.addChildren([brokerHomeRoute, brokerFeesRoute]),
+  buyerWorkspaceRoute.addChildren([buyerHomeRoute]),
+  moderatorWorkspaceRoute.addChildren([moderatorVerificationRoute]),
 ])
 
 export const router = createRouter({ routeTree })

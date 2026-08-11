@@ -27,6 +27,23 @@ const iconsByPath = {
   '/admin': DashboardSquare01Icon,
   '/admin/users': UserGroupIcon,
   '/admin/settings': Settings01Icon,
+  '/admin/verification': UserGroupIcon,
+  '/admin/billing': DashboardSquare01Icon,
+  // Vendor workspace (ПромМаркет). Icons reuse the safe set already imported;
+  // a later pass can swap in more specific glyphs once the icon set is verified.
+  '/vendor': Home01Icon,
+  '/vendor/billing': DashboardSquare01Icon,
+  '/vendor/credits': DashboardSquare01Icon,
+  '/vendor/verify': UserGroupIcon,
+  '/vendor/featured': Home01Icon,
+  '/vendor/add-ons': DashboardSquare01Icon,
+  // Broker workspace.
+  '/broker': DashboardSquare01Icon,
+  '/broker/fees': DashboardSquare01Icon,
+  // Buyer workspace.
+  '/buyer': Home01Icon,
+  // Moderator workspace.
+  '/moderator/verification': UserGroupIcon,
 } as const
 
 function getSidebarDefaultOpen() {
@@ -53,9 +70,11 @@ export function WorkspaceShell({
   const settingsPath = user.role === 'admin' ? '/admin/settings' : '/app/settings'
   const items: ReadonlyArray<DashboardNavigationItem> = navigationItems.map((item) => ({
     ...item,
-    icon: iconsByPath[item.to],
+    icon: iconsByPath[item.to as keyof typeof iconsByPath],
     isActive: item.to === pathname,
   }))
+
+  const workspaceLabel = workspaceLabelForRole(user.role)
 
   return (
     <SidebarProvider defaultOpen={getSidebarDefaultOpen()}>
@@ -66,14 +85,32 @@ export function WorkspaceShell({
         onLogout={onLogout}
         settingsPath={settingsPath}
         user={user}
-        workspaceLabel={user.role === 'admin' ? 'Admin workspace' : 'User workspace'}
+        workspaceLabel={workspaceLabel}
       />
       <SidebarInset>
         <SiteHeader
-          title={activeItem?.label ?? (user.role === 'admin' ? 'Dashboard' : 'Home')}
+          title={activeItem?.label ?? homePath}
         />
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   )
+}
+
+function workspaceLabelForRole(role: UserDto['role']): string {
+  switch (role) {
+    case 'admin':
+      return 'Администрирование'
+    case 'vendor':
+      return 'Кабинет поставщика'
+    case 'broker':
+      return 'Кабинет брокера'
+    case 'buyer':
+      return 'Кабинет покупателя'
+    case 'moderator':
+      return 'Модерация'
+    case 'user':
+    default:
+      return 'Личный кабинет'
+  }
 }
