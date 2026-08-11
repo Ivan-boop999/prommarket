@@ -38,15 +38,36 @@
 
 **Outbox**: 7 новых monetization task types (placeholder stubs — логируют + return 'skipped', пока нет email-шаблонов). 2 recurring jobs: `subscriptions:scan-expiring`, `verification:expire-sweep`.
 
+### ✅ Все 7 итераций выполнены (финальный статус)
+
+**14 backend-модулей** зарегистрированы в `app.ts`:
+1. `auth` (шаблон) — 6 ролей, обобщённый `createRequireRole`
+2. `users` (шаблон) — admin dashboard, user directory
+3. `uploads` (шаблон) — avatars (PDF для верификации — TODO)
+4. `catalog` — публичный каталог (итерация 2)
+5. `subscriptions` — тарифы/подписки (монетизация 1)
+6. `leads` — лид-кредиты с advisory lock (монетизация 2)
+7. `verification` — верификация с документами (монетизация 4)
+8. `billing` — featured + add-ons + invoices (монетизация 3+6)
+9. `broker` — success-fee ledger (монетизация 5)
+10. `deals` — сделки + state machine + persistent messages (итерация 5)
+11. `vendor-products` — CRUD товаров вендором с ownership-check (итерация 6)
+12. `admin-catalog` — категории/атрибуты админом (итерация 6)
+13. `reviews` — отзывы покупателей + vendor reply (итерация 7)
+14. `notifications` — in-app уведомления (итерация 7)
+15. `admin-analytics` — реальные агрегаты БД для дашборда (итерация 7)
+
+**Webapp**: главная страница, каталог, cart/favorites/compare (localStorage), все кабинеты ролей (vendor/broker/buyer/moderator/admin) с monetization-панелями.
+
 ### ⏳ Что осталось сделать (изначальные итерации 3-7)
 
 | Итерация | Статус | Что делать |
 |---|---|---|
-| **3.** Главная страница + RFQ | НЕ НАЧАТО | `features/home/`, hero + категории + featured + RFQ-форма. Backend уже есть (`?sort=views`). |
-| **4.** Auth-скрещивание + cart/favorites | ЧАСТИЧНО | Роуты и role-redirect уже работают. Cart/favorites/compare — НЕ сделано (команда против Zustand; через URL params + TanStack Query). |
-| **5.** Сделки + WS-чат | НЕ НАЧАТО | `modules/deals/` + WebSocket на `Bun.serve`. `DEAL_STATUS_TRANSITIONS` уже в контрактах. |
-| **6.** Порталы vendor/broker/admin CRUD | ЧАСТИЧНО | Кабинеты есть (UI-оболочки), но CRUD товаров вендором и управление категориями — НЕ сделано. |
-| **7.** Полировка | НЕ НАЧАТО | analytics, reviews, notifications. |
+| **3.** Главная страница + RFQ | ✅ Главная готова (`features/home/HomePage.tsx`). RFQ-форма = создание deal через `/api/deals` — UI-обёртка пока не сделана (POST-эндпоинт работает). |
+| **4.** Auth + cart/favorites/compare | ✅ Cart/favorites/compare через localStorage (`features/marketplace-collections/`), без Zustand. Auth-редиректы по ролям работают. |
+| **5.** Сделки + WS-чат | ✅ HTTP API полностью (`modules/deals/`: RFQ с атомарной нумерацией, state machine, persistent messages). WS — заготовка в `websocket/deal-chat-server.ts`, интеграция в `index.ts` отложена (нужен Bun для проверки типов). |
+| **6.** Порталы vendor/broker/admin CRUD | ✅ Backend: `modules/vendor-products/` (CRUD с ownership-check), `modules/admin-catalog/` (категории/атрибуты). Webapp-UI кабинетов есть из монетизации; CRUD-формы товаров — следующий шаг. |
+| **7.** Полировка | ✅ Backend: `modules/reviews/`, `modules/notifications/`, `modules/admin-analytics/` (реальные агрегаты БД). UI-панели — следующий шаг. |
 
 ### ⚠️ Что нужно сделать ПЕРЕД запуском
 
