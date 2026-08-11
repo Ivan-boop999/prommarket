@@ -2,7 +2,7 @@ import type { DbClient } from '../../db'
 import { SubscriptionsService } from './application/subscriptions-service'
 import { createPrismaSubscriptionsRepository } from './infrastructure/subscriptions-repository'
 import { createSubscriptionsRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateSubscriptionsModuleOptions = {
   db: DbClient

@@ -1,7 +1,7 @@
 import type { DbClient } from '../../db'
 import { NotificationsService } from './application/notifications-service'
 import { createNotificationsRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateNotificationsModuleOptions = {
   db: DbClient

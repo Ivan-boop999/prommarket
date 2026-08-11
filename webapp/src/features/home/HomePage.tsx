@@ -18,7 +18,7 @@ import { listCategories, listProducts } from '@/features/catalog/api'
  *
  * No auth dependency — everything reads through the public catalog client.
  */
-export function HomePage() {
+export function MarketplaceHomePage() {
   const [search, setSearch] = useState('')
 
   const categoriesQuery = useQuery({
@@ -83,7 +83,7 @@ export function HomePage() {
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Категории</h2>
-          <Link to="/catalog" className="text-sm text-primary hover:underline">
+          <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined }} className="text-sm text-primary hover:underline">
             Все категории →
           </Link>
         </div>
@@ -93,7 +93,7 @@ export function HomePage() {
                 <Skeleton key={i} className="h-24 w-full rounded-lg" />
               ))
             : rootCategories.map((cat) => (
-                <Link key={cat.id} to="/catalog" search={{ categoryId: cat.id }}>
+                <Link key={cat.id} to="/catalog" search={{ categoryId: cat.id, search: undefined, status: undefined, sortBy: undefined, page: undefined }}>
                   <Card className="h-full transition-colors hover:bg-accent">
                     <CardContent className="flex flex-col items-center gap-2 p-4 text-center">
                       <span className="text-3xl">{cat.icon ?? '📦'}</span>
@@ -112,7 +112,7 @@ export function HomePage() {
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Популярные товары</h2>
-          <Link to="/catalog" className="text-sm text-primary hover:underline">
+          <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined }} className="text-sm text-primary hover:underline">
             Весь каталог →
           </Link>
         </div>
@@ -131,7 +131,7 @@ export function HomePage() {
                     <div className="aspect-square bg-muted">
                       {product.primaryImage ? (
                         <img
-                          src={product.primaryImage}
+                          src={product.primaryImage?.url}
                           alt={product.title}
                           className="size-full object-cover"
                         />
@@ -177,7 +177,7 @@ export function HomePage() {
               </p>
             </div>
             <Button variant="secondary" size="lg" asChild>
-              <Link to="/signup">Стать поставщиком</Link>
+              <Link to="/signup" search={{ returnTo: undefined }}>Стать поставщиком</Link>
             </Button>
           </CardContent>
         </Card>

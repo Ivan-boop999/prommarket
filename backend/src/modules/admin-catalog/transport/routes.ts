@@ -13,7 +13,8 @@ import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
 import { validationErrorHook } from '../../../http/errors'
-import type { AuthHttpEnv, MiddlewareHandler } from '../../auth'
+import type { AuthHttpEnv } from '../../auth'
+import type { MiddlewareHandler } from 'hono'
 import { executeAdminCatalog } from './errors'
 import type { AdminCatalogService } from '../application/admin-catalog-service'
 

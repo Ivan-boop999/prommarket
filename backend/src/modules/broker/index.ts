@@ -2,7 +2,7 @@ import type { DbClient } from '../../db'
 import { BrokerService } from './application/broker-service'
 import { createPrismaBrokerRepository } from './infrastructure/broker-repository'
 import { createBrokerRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateBrokerModuleOptions = {
   db: DbClient

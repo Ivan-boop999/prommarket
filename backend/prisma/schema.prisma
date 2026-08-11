@@ -605,7 +605,7 @@ model Invoice {
   items            Json
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
-  subscription     VendorSubscription? @relation(fields: [subscriptionId], references: [id], map: "invoices_subscription_id_fkey")
+  subscription     VendorSubscription? @relation("SubscriptionInvoice")
   deal             Deal?         @relation(fields: [dealId], references: [id], map: "invoices_deal_id_fkey")
   vendor           Vendor?       @relation(fields: [vendorId], references: [id], map: "invoices_vendor_id_fkey")
   featuredPlacements FeaturedPlacement[]
@@ -711,9 +711,8 @@ model VendorSubscription {
   amount           Decimal              @db.Decimal(16, 2)
   currency         String               @default("RUB")
   /// Reference to the issued invoice awaiting or recording payment.
-  invoiceId        String?              @map("invoice_id") @db.Uuid
-  invoice          Invoice?             @relation(fields: [invoiceId], references: [id], map: "vendor_subscriptions_invoice_id_fkey")
-  invoices         Invoice[]
+  invoiceId        String?              @unique(map: "vendor_subscriptions_invoice_id_key") @map("invoice_id") @db.Uuid
+  invoice          Invoice?             @relation("SubscriptionInvoice", fields: [invoiceId], references: [id], map: "vendor_subscriptions_invoice_id_fkey")
   confirmedBy      String?              @map("confirmed_by") @db.Uuid
   confirmedAt      DateTime?            @map("confirmed_at")
   cancelledAt      DateTime?            @map("cancelled_at")
@@ -991,6 +990,7 @@ model ProductReview {
   /// A vendor may reply once; stored inline to keep the review self-contained.
   vendorReply String? @map("vendor_reply")
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "product_reviews_product_id_fkey")
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade, map: "product_reviews_author_id_fkey")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -1012,6 +1012,7 @@ model Notification {
   link      String?  @map("link")
   isRead    Boolean  @default(false) @map("is_read")
   readAt    DateTime? @map("read_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "notifications_user_id_fkey")
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([userId, isRead], map: "notifications_user_id_is_read_idx")

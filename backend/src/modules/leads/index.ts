@@ -2,7 +2,7 @@ import type { DbClient } from '../../db'
 import { LeadsService } from './application/leads-service'
 import { createPrismaLeadsRepository } from './infrastructure/leads-repository'
 import { createLeadsRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateLeadsModuleOptions = {
   db: DbClient

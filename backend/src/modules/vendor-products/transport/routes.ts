@@ -9,8 +9,9 @@ import {
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
-import { validationErrorHook } from '../../../http/errors'
-import type { AuthHttpEnv, MiddlewareHandler } from '../../auth'
+import { AppError, validationErrorHook } from '../../../http/errors'
+import type { AuthHttpEnv } from '../../auth'
+import type { MiddlewareHandler } from 'hono'
 import { executeVendorProducts } from './errors'
 import type { VendorProductsService } from '../application/vendor-products-service'
 
@@ -108,15 +109,15 @@ export function createVendorProductsRoutes({
   routes.openapi(getRoute, async (c) => {
     const { id } = c.req.valid('param')
     const vendorId = await resolveVendorId(c.var.user.id)
-    if (!vendorId) return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor not found' } }, 404)
+    if (!vendorId) throw new AppError(404, 'NOT_FOUND', 'Vendor not found')
     const product = await executeVendorProducts(() => service.get(vendorId, id))
-    if (!product) return c.json({ error: { code: 'NOT_FOUND', message: 'Not found' } }, 404)
+    if (!product) throw new AppError(404, 'NOT_FOUND', 'Not found')
     return c.json(product, 200)
   })
 
   routes.openapi(createRouteDef, async (c) => {
     const vendorId = await resolveVendorId(c.var.user.id)
-    if (!vendorId) return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor not found' } }, 404)
+    if (!vendorId) throw new AppError(404, 'NOT_FOUND', 'Vendor not found')
     const input: CreateProductInput = c.req.valid('json')
     const product = await executeVendorProducts(() => service.create(vendorId, input))
     return c.json(product, 201)
@@ -125,7 +126,7 @@ export function createVendorProductsRoutes({
   routes.openapi(updateRoute, async (c) => {
     const { id } = c.req.valid('param')
     const vendorId = await resolveVendorId(c.var.user.id)
-    if (!vendorId) return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor not found' } }, 404)
+    if (!vendorId) throw new AppError(404, 'NOT_FOUND', 'Vendor not found')
     const input: UpdateProductInput = c.req.valid('json')
     const product = await executeVendorProducts(() => service.update(vendorId, id, input))
     return c.json(product, 200)
@@ -134,7 +135,7 @@ export function createVendorProductsRoutes({
   routes.openapi(deleteRoute, async (c) => {
     const { id } = c.req.valid('param')
     const vendorId = await resolveVendorId(c.var.user.id)
-    if (!vendorId) return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor not found' } }, 404)
+    if (!vendorId) throw new AppError(404, 'NOT_FOUND', 'Vendor not found')
     await executeVendorProducts(() => service.remove(vendorId, id))
     return c.body(null, 204)
   })

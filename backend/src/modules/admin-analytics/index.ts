@@ -1,7 +1,7 @@
 import type { DbClient } from '../../db'
 import { AdminAnalyticsService } from './application/admin-analytics-service'
 import { createAdminAnalyticsRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateAdminAnalyticsModuleOptions = {
   db: DbClient

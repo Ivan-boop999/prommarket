@@ -2,7 +2,7 @@ import type { DbClient } from '../../db'
 import { BillingService } from './application/billing-service'
 import { createPrismaBillingRepository } from './infrastructure/billing-repository'
 import { createBillingRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateBillingModuleOptions = {
   db: DbClient

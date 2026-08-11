@@ -168,14 +168,14 @@ export function createPrismaSubscriptionsRepository(db: DbClient): SubscriptionR
         orderBy: { createdAt: 'desc' },
         include: { plan: true },
       })
-      return row ? toSubscriptionDto(row as SubscriptionRow) : null
+      return row ? toSubscriptionDto(row as unknown as SubscriptionRow) : null
     },
 
     async findPendingSubscription(vendorId, planId) {
       const row = await db.vendorSubscription.findFirst({
         where: { vendorId, planId, status: 'pending_payment' },
       })
-      return row ? toSubscriptionDto(row as SubscriptionRow) : null
+      return row ? toSubscriptionDto(row as unknown as unknown as SubscriptionRow) : null
     },
 
     async findVendorByUserId(userId) {
@@ -241,7 +241,7 @@ export function createPrismaSubscriptionsRepository(db: DbClient): SubscriptionR
         throw new SubscriptionFailure('not_found', 'Subscription or invoice vanished after create')
       }
       return {
-        subscription: toSubscriptionDto(sub as SubscriptionRow),
+        subscription: toSubscriptionDto(sub as unknown as SubscriptionRow),
         invoice: toInvoiceDto(inv as InvoiceRow),
       }
     },
@@ -321,7 +321,7 @@ export function createPrismaSubscriptionsRepository(db: DbClient): SubscriptionR
 
       return {
         invoice: toInvoiceDto(result.invoice as InvoiceRow),
-        subscription: toSubscriptionDto(result.subscription as SubscriptionRow),
+        subscription: toSubscriptionDto(result.subscription as unknown as SubscriptionRow),
       }
     },
 

@@ -10,8 +10,9 @@ import {
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
-import { validationErrorHook } from '../../../http/errors'
-import type { AuthHttpEnv, MiddlewareHandler } from '../../auth'
+import { AppError, validationErrorHook } from '../../../http/errors'
+import type { AuthHttpEnv } from '../../auth'
+import type { MiddlewareHandler } from 'hono'
 import { executeSubscriptions } from './errors'
 import type { SubscriptionsService } from '../application/subscriptions-service'
 
@@ -153,7 +154,7 @@ export function createSubscriptionsRoutes({
   vendorRoutes.openapi(subscribeRoute, async (c) => {
     const vendorId = await resolveVendorId(c.var.user.id)
     if (!vendorId) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor profile not found' } }, 404)
+      throw new AppError(404, 'NOT_FOUND', 'Vendor profile not found')
     }
     const input: CreateSubscriptionInput = c.req.valid('json')
     const result = await executeSubscriptions(() => service.subscribe(vendorId, input))

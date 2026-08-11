@@ -10,8 +10,9 @@ import {
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
-import { validationErrorHook } from '../../../http/errors'
-import type { AuthHttpEnv, MiddlewareHandler } from '../../auth'
+import { AppError, validationErrorHook } from '../../../http/errors'
+import type { AuthHttpEnv } from '../../auth'
+import type { MiddlewareHandler } from 'hono'
 import { executeLeads } from './errors'
 import type { LeadsService } from '../application/leads-service'
 
@@ -175,7 +176,7 @@ export function createLeadsRoutes({
   vendorRoutes.openapi(purchaseRoute, async (c) => {
     const vendorId = await resolveVendorId(c.var.user.id)
     if (!vendorId) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor profile not found' } }, 404)
+      throw new AppError(404, 'NOT_FOUND', 'Vendor profile not found')
     }
     const input = c.req.valid('json')
     const result = await executeLeads(() => service.purchase(vendorId, input))
@@ -185,7 +186,7 @@ export function createLeadsRoutes({
   vendorRoutes.openapi(unlockRoute, async (c) => {
     const vendorId = await resolveVendorId(c.var.user.id)
     if (!vendorId) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor profile not found' } }, 404)
+      throw new AppError(404, 'NOT_FOUND', 'Vendor profile not found')
     }
     const input = c.req.valid('json')
     const result = await executeLeads(() => service.unlock(vendorId, input.referenceId))

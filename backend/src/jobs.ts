@@ -129,7 +129,7 @@ export const backgroundJobs = {
         type: 'subscriptions:expiring',
         // Dedupe per subscription per day: a same-day re-run replaces, not duplicates.
         dedupeKey: `subscriptions:expiring:${sub.id}:${dayTag}`,
-        payload: { subscriptionId: sub.id, vendorId: sub.vendorId, periodEnd: sub.periodEnd.toISOString() },
+        payload: { subscriptionId: sub.id, vendorId: sub.vendorId, periodEnd: sub.periodEnd?.toISOString() ?? null },
       })
       enqueued += 1
     }

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
+  useActivateAddOnMutation,
   useBrokerFeesQuery,
   useBrokerStatsQuery,
   useConfirmAddOnMutation,
@@ -18,6 +19,7 @@ import {
   useCreateFeaturedPlacementMutation,
   useCurrentSubscriptionQuery,
   useInvoicesQuery,
+  useInvoiceBrokerFeeMutation,
   useLeadBalanceQuery,
   useLeadCreditPriceQuery,
   useLeadLedgerQuery,
@@ -28,7 +30,6 @@ import {
   useSubscribeMutation,
   useSubscriptionInvoicesQuery,
   useSubscriptionPlansQuery,
-  useUnlockLeadMutation,
 } from './queries'
 
 /**

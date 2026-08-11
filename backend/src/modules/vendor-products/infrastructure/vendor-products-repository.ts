@@ -47,33 +47,33 @@ type ProductDetailRow = {
   leadTime: string | null
   conditionNote: string | null
   categoryId: string
-  vendorId: string
   views: number
   featuredUntil: Date | null
   createdAt: Date
   updatedAt: Date
   images: Array<{ id: string; url: string; alt: string | null; order: number; isPrimary: boolean }>
   prices: Array<{ id: string; type: string; price: { toString(): string } | null; currency: string; includesVat: boolean; vatRate: number; volumeFrom: number | null; volumeTo: number | null }>
-  attributes: Array<{ id: string; attributeId: string; value: unknown; attribute: { id: string; name: string; slug: string; type: string; unit: string | null }>
+  attributes: Array<{ id: string; value: unknown; attribute: { id: string; name: string; slug: string } }>
   category: { id: string; name: string; slug: string }
-  vendor: { id: string; companyName: string; verified: boolean; verificationTier: string; rating: { toString(): string } }
+  vendor: { id: string; companyName: string; verified: boolean; description: string | null; rating: { toString(): string }; totalDeals: number }
 }
 
 const detailInclude = {
   images: { orderBy: { order: 'asc' as const } },
   prices: { orderBy: { type: 'asc' as const } },
-  attributes: { include: { attribute: { select: { id: true, name: true, slug: true, type: true, unit: true } } } },
-  category: { select: { id: true, name: true, slug: true } },
-  vendor: { select: { id: true, companyName: true, verified: true, verificationTier: true, rating: true } },
+  attributes: { include: { attribute: { select: { id: true, name: true, slug: true } } } },
+  category: { select: { id: true } },
+  vendor: { select: { id: true, companyName: true, verified: true, description: true, rating: true, totalDeals: true } },
 } as const
 
-// Reuse the catalog mapper's shape. The full DTO mapping is substantial; for
-// the vendor surface we return a compact ProductDetail that the contract accepts.
+// Mapper mirrors the catalog module's toProductDetail exactly so the wire shape
+// matches productDetailSchema. The vendor surface returns the same DTO.
 function toProductDetail(row: ProductDetailRow): ProductDetail {
   const mainPrice = row.prices.find((p) => p.type === 'fixed') ?? row.prices[0]
-  const primaryImage = row.images.find((i) => i.isPrimary) ?? row.images[0]
+  const primaryImg = [...row.images].sort(
+    (a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.order - b.order,
+  )[0]
   const volumeDiscount = row.prices.find((p) => p.type === 'volume')
-  // Compute volumeDiscountPercent if a cheaper volume tier exists vs main price.
   let volumeDiscountPercent: number | null = null
   if (mainPrice?.price && volumeDiscount?.price) {
     const main = Number(mainPrice.price.toString())
@@ -86,35 +86,44 @@ function toProductDetail(row: ProductDetailRow): ProductDetail {
     id: row.id,
     title: row.title,
     slug: row.slug,
-    description: row.description,
     sku: row.sku,
-    oemNumber: row.oemNumber,
     brand: row.brand,
-    model: row.model,
-    year: row.year,
     status: row.status as ProductDetail['status'],
     availability: row.availability as ProductDetail['availability'],
-    leadTime: row.leadTime,
-    conditionNote: row.conditionNote,
-    categoryId: row.categoryId,
-    vendorId: row.vendorId,
-    views: row.views,
-    featuredUntil: row.featuredUntil ? row.featuredUntil.toISOString() : null,
-    primaryImage: primaryImage
-      ? { id: primaryImage.id, url: primaryImage.url, alt: primaryImage.alt, order: primaryImage.order, isPrimary: primaryImage.isPrimary }
-      : null,
-    images: row.images.map((i) => ({
-      id: i.id,
-      url: i.url,
-      alt: i.alt,
-      order: i.order,
-      isPrimary: i.isPrimary,
-    })),
     mainPrice: mainPrice?.price ? mainPrice.price.toString() : null,
     currency: mainPrice?.currency ?? 'RUB',
-    includesVat: mainPrice?.includesVat ?? true,
-    vatRate: mainPrice?.vatRate ?? 20,
     volumeDiscountPercent,
+    primaryImage: primaryImg
+      ? {
+          id: primaryImg.id,
+          url: primaryImg.url,
+          alt: primaryImg.alt,
+          order: primaryImg.order,
+          isPrimary: primaryImg.isPrimary,
+        }
+      : null,
+    vendorId: row.vendor.id,
+    vendorName: row.vendor.companyName,
+    vendorVerified: row.vendor.verified,
+    categoryId: row.category.id,
+    views: row.views,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    description: row.description,
+    oemNumber: row.oemNumber,
+    model: row.model,
+    year: row.year,
+    leadTime: row.leadTime,
+    conditionNote: row.conditionNote,
+    images: [...row.images]
+      .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.order - b.order)
+      .map((img) => ({
+        id: img.id,
+        url: img.url,
+        alt: img.alt,
+        order: img.order,
+        isPrimary: img.isPrimary,
+      })),
     prices: row.prices.map((p) => ({
       id: p.id,
       type: p.type as ProductDetail['prices'][number]['type'],
@@ -125,30 +134,17 @@ function toProductDetail(row: ProductDetailRow): ProductDetail {
       volumeFrom: p.volumeFrom,
       volumeTo: p.volumeTo,
     })),
-    attributes: row.attributes.map((a) => ({
-      id: a.id,
-      attributeId: a.attributeId,
-      attributeName: a.attribute.name,
-      attributeSlug: a.attribute.slug,
-      attributeType: a.attribute.type as ProductDetail['attributes'][number]['attributeType'],
-      attributeUnit: a.attribute.unit,
-      value: a.value as ProductDetail['attributes'][number]['value'],
+    attributes: row.attributes.map((pa) => ({
+      id: pa.id,
+      attributeId: pa.attribute.id,
+      attributeSlug: pa.attribute.slug,
+      attributeName: pa.attribute.name,
+      value: pa.value as ProductDetail['attributes'][number]['value'],
     })),
-    category: {
-      id: row.category.id,
-      name: row.category.name,
-      slug: row.category.slug,
-    },
-    vendor: {
-      id: row.vendor.id,
-      companyName: row.vendor.companyName,
-      verified: row.vendor.verified,
-      verificationTier: row.vendor.verificationTier as ProductDetail['vendor']['verificationTier'],
-      vendorRating: Number(row.vendor.rating.toString()),
-    },
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-  } as ProductDetail
+    vendorDescription: row.vendor.description ?? null,
+    vendorRating: Number(row.vendor.rating.toString()),
+    vendorTotalDeals: row.vendor.totalDeals,
+  }
 }
 
 export function createPrismaVendorProductsRepository(db: DbClient): VendorProductRepository {
@@ -159,7 +155,7 @@ export function createPrismaVendorProductsRepository(db: DbClient): VendorProduc
         include: detailInclude,
         orderBy: { createdAt: 'desc' },
       })
-      return rows.map((r) => toProductDetail(r as ProductDetailRow))
+      return rows.map((r) => toProductDetail(r as unknown as ProductDetailRow))
     },
 
     async findByVendor(vendorId, productId) {
@@ -171,7 +167,7 @@ export function createPrismaVendorProductsRepository(db: DbClient): VendorProduc
       if (row.vendorId !== vendorId) {
         throw new VendorProductFailure('not_owner', 'Product belongs to another vendor')
       }
-      return toProductDetail(row as ProductDetailRow)
+      return toProductDetail(row as unknown as ProductDetailRow)
     },
 
     async create(vendorId, input) {
@@ -219,7 +215,7 @@ export function createPrismaVendorProductsRepository(db: DbClient): VendorProduc
         where: { id: input.categoryId },
         data: { productCount: { increment: 1 } },
       })
-      return toProductDetail(product as ProductDetailRow)
+      return toProductDetail(product as unknown as ProductDetailRow)
     },
 
     async update(vendorId, productId, input) {
@@ -246,7 +242,7 @@ export function createPrismaVendorProductsRepository(db: DbClient): VendorProduc
         },
         include: detailInclude,
       })
-      return toProductDetail(updated as ProductDetailRow)
+      return toProductDetail(updated as unknown as ProductDetailRow)
     },
 
     async remove(vendorId, productId) {

@@ -2,7 +2,7 @@ import type { DbClient } from '../../db'
 import { DealsService } from './application/deals-service'
 import { createPrismaDealsRepository } from './infrastructure/deals-repository'
 import { createDealsRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateDealsModuleOptions = {
   db: DbClient

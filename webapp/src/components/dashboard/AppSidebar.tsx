@@ -26,7 +26,7 @@ export function AppSidebar({
   workspaceLabel,
 }: {
   accountPath?: WorkspaceRoutePath
-  homePath: WorkspaceRoutePath
+  homePath: string
   items: ReadonlyArray<DashboardNavigationItem>
   onLogout: () => Promise<void>
   settingsPath: WorkspaceRoutePath

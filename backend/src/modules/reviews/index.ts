@@ -1,7 +1,7 @@
 import type { DbClient } from '../../db'
 import { ReviewsService } from './application/reviews-service'
 import { createReviewsRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateReviewsModuleOptions = {
   db: DbClient

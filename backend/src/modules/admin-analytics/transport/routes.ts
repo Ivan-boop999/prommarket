@@ -3,7 +3,8 @@ import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
 import { validationErrorHook } from '../../../http/errors'
-import type { AuthHttpEnv, MiddlewareHandler } from '../../auth'
+import type { AuthHttpEnv } from '../../auth'
+import type { MiddlewareHandler } from 'hono'
 import type { AdminAnalyticsService } from '../application/admin-analytics-service'
 
 const errorContent = { 'application/json': { schema: apiErrorSchema } }

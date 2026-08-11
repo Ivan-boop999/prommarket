@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getProduct } from '@/features/catalog/api'
@@ -92,7 +92,7 @@ export function CartPage() {
       {cart.count > 0 && (
         <div className="mt-4 flex gap-2">
           <Button asChild>
-            <Link to="/login">Оформить заявку</Link>
+            <Link to="/login" search={{ returnTo: undefined }}>Оформить заявку</Link>
           </Button>
           <Button variant="outline" onClick={() => cart.clear()}>
             Очистить
@@ -124,7 +124,7 @@ export function FavoritesPage() {
               <Link to="/catalog/$productId" params={{ productId: p.id }}>
                 <div className="aspect-square bg-muted">
                   {p.primaryImage ? (
-                    <img src={p.primaryImage} alt={p.title} className="size-full object-cover" />
+                    <img src={p.primaryImage?.url} alt={p.title} className="size-full object-cover" />
                   ) : null}
                 </div>
               </Link>
@@ -249,7 +249,7 @@ function EmptyState({ message }: { message: string }) {
         {message}
         <div className="mt-4">
           <Button asChild variant="outline">
-            <Link to="/catalog">Перейти в каталог</Link>
+            <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined }}>Перейти в каталог</Link>
           </Button>
         </div>
       </CardContent>

@@ -2,7 +2,7 @@ import type { DbClient } from '../../db'
 import { VendorProductsService } from './application/vendor-products-service'
 import { createPrismaVendorProductsRepository } from './infrastructure/vendor-products-repository'
 import { createVendorProductsRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateVendorProductsModuleOptions = {
   db: DbClient

@@ -21,3 +21,4 @@ export class BillingFailure extends Error {
 export const DEFAULT_FEATURED_PRICE_PER_DAY = 500
 /** Default price per add-on activation, in RUB. */
 export const DEFAULT_ADDON_PRICE = 5000
+export const DEFAULT_CURRENCY = 'RUB'

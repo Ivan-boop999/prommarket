@@ -1,7 +1,7 @@
 import type { DbClient } from '../../db'
 import { AdminCatalogService } from './application/admin-catalog-service'
 import { createAdminCatalogRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateAdminCatalogModuleOptions = {
   db: DbClient

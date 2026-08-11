@@ -16,8 +16,9 @@ import {
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
-import { validationErrorHook } from '../../../http/errors'
-import type { AuthHttpEnv, MiddlewareHandler } from '../../auth'
+import { AppError, validationErrorHook } from '../../../http/errors'
+import type { AuthHttpEnv } from '../../auth'
+import type { MiddlewareHandler } from 'hono'
 import { executeDeals } from './errors'
 import type { DealsService } from '../application/deals-service'
 
@@ -127,7 +128,7 @@ export function createDealsRoutes({ requireAuth, service }: CreateDealsRoutesOpt
   routes.openapi(getDealRoute, async (c) => {
     const { id } = c.req.valid('param')
     const deal = await executeDeals(() => service.getDetail(id))
-    if (!deal) return c.json({ error: { code: 'NOT_FOUND', message: 'Deal not found' } }, 404)
+    if (!deal) throw new AppError(404, 'NOT_FOUND', 'Deal not found')
     return c.json(deal, 200)
   })
 

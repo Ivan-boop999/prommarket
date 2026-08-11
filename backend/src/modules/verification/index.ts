@@ -2,7 +2,7 @@ import type { DbClient } from '../../db'
 import { VerificationService } from './application/verification-service'
 import { createPrismaVerificationRepository } from './infrastructure/verification-repository'
 import { createVerificationRoutes } from './transport/routes'
-import type { MiddlewareHandler } from '../../modules/auth'
+import type { MiddlewareHandler } from 'hono'
 
 type CreateVerificationModuleOptions = {
   db: DbClient

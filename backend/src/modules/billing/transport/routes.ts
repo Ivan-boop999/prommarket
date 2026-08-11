@@ -10,8 +10,9 @@ import {
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
-import { validationErrorHook } from '../../../http/errors'
-import type { AuthHttpEnv, MiddlewareHandler } from '../../auth'
+import { AppError, validationErrorHook } from '../../../http/errors'
+import type { AuthHttpEnv } from '../../auth'
+import type { MiddlewareHandler } from 'hono'
 import { executeBilling } from './errors'
 import type { BillingService } from '../application/billing-service'
 
@@ -155,7 +156,7 @@ export function createBillingRoutes({
   vendorRoutes.openapi(createFeaturedRoute, async (c) => {
     const vendorId = await resolveVendorId(c.var.user.id)
     if (!vendorId) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor profile not found' } }, 404)
+      throw new AppError(404, 'NOT_FOUND', 'Vendor profile not found')
     }
     const input = c.req.valid('json')
     const result = await executeBilling(() => service.createFeaturedPlacement(vendorId, input))
@@ -165,7 +166,7 @@ export function createBillingRoutes({
   vendorRoutes.openapi(activateAddOnRoute, async (c) => {
     const vendorId = await resolveVendorId(c.var.user.id)
     if (!vendorId) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor profile not found' } }, 404)
+      throw new AppError(404, 'NOT_FOUND', 'Vendor profile not found')
     }
     const input = c.req.valid('json')
     const result = await executeBilling(() => service.activateAddOn(vendorId, input))

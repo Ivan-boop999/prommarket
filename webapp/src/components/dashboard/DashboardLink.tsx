@@ -5,13 +5,12 @@ import {
 } from 'react'
 
 import { useSidebar } from '@/components/ui/sidebar'
-import type { WorkspaceRoutePath } from '@/features/navigation'
 
 type DashboardLinkProps = Omit<
   ComponentPropsWithoutRef<'a'>,
   'className' | 'href' | 'style'
 > & {
-  to: WorkspaceRoutePath
+  to: string
 }
 
 export const DashboardLink = forwardRef<HTMLAnchorElement, DashboardLinkProps>(

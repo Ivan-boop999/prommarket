@@ -9,8 +9,9 @@ import {
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
-import { validationErrorHook } from '../../../http/errors'
-import type { AuthHttpEnv, MiddlewareHandler } from '../../auth'
+import { AppError, validationErrorHook } from '../../../http/errors'
+import type { AuthHttpEnv } from '../../auth'
+import type { MiddlewareHandler } from 'hono'
 import { executeVerification } from './errors'
 import type { VerificationService } from '../application/verification-service'
 
@@ -139,7 +140,7 @@ export function createVerificationRoutes({
   vendorRoutes.openapi(createRequestRoute, async (c) => {
     const vendorId = await resolveVendorId(c.var.user.id)
     if (!vendorId) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Vendor profile not found' } }, 404)
+      throw new AppError(404, 'NOT_FOUND', 'Vendor profile not found')
     }
     const input: CreateVerificationRequestInput = c.req.valid('json')
     const result = await executeVerification(() => service.createRequest(vendorId, input))
@@ -155,7 +156,7 @@ export function createVerificationRoutes({
   vendorRoutes.openapi(getRequestRoute, async (c) => {
     const { id } = c.req.valid('param')
     const result = await executeVerification(() => service.getById(id))
-    if (!result) return c.json({ error: { code: 'NOT_FOUND', message: 'Not found' } }, 404)
+    if (!result) throw new AppError(404, 'NOT_FOUND', 'Not found')
     return c.json(result, 200)
   })
 

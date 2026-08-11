@@ -389,20 +389,9 @@ export const createDealMessageInputSchema = z
   })
   .strict()
 
-export const dealsQuerySchema = paginationQuerySchema
-  .extend({
-    status: z.array(dealStatusSchema).optional(),
-    type: z.array(dealTypeSchema).optional(),
-    vendorId: z.uuid().optional(),
-    buyerId: z.uuid().optional(),
-    brokerId: z.uuid().optional(),
-  })
-  .strict()
-
 export type CreateDealInput = z.infer<typeof createDealInputSchema>
 export type ChangeDealStatusInput = z.infer<typeof changeDealStatusInputSchema>
 export type CreateDealMessageInput = z.infer<typeof createDealMessageInputSchema>
-export type DealsQuery = z.infer<typeof dealsQuerySchema>
 
 // ---------------------------------------------------------------------------
 // QUERY / PAGINATION (used by catalog endpoints in iteration 2)
@@ -414,6 +403,18 @@ export const paginationQuerySchema = z
     pageSize: z.coerce.number().int().min(1).max(100).default(12),
   })
   .strict()
+
+export const dealsQuerySchema = paginationQuerySchema
+  .extend({
+    status: z.array(dealStatusSchema).optional(),
+    type: z.array(dealTypeSchema).optional(),
+    vendorId: z.uuid().optional(),
+    buyerId: z.uuid().optional(),
+    brokerId: z.uuid().optional(),
+  })
+  .strict()
+
+export type DealsQuery = z.infer<typeof dealsQuerySchema>
 
 export const productSortFieldSchema = z.enum([
   'createdAt',
@@ -534,6 +535,7 @@ export type Buyer = z.infer<typeof buyerSchema>
 export type DealMessage = z.infer<typeof dealMessageSchema>
 export type DealHistoryEntry = z.infer<typeof dealHistoryEntrySchema>
 export type DealListItem = z.infer<typeof dealListItemSchema>
+export type Deal = DealListItem
 export type DealDetail = z.infer<typeof dealDetailSchema>
 export type ProductsQuery = z.infer<typeof productsQuerySchema>
 export type ProductSortField = z.infer<typeof productSortFieldSchema>
