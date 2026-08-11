@@ -116,8 +116,17 @@ function CreateProductForm({ onSuccess }: { onSuccess: () => void }) {
   const [price, setPrice] = useState('')
   const [sku, setSku] = useState('')
   const [brand, setBrand] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [images, setImages] = useState<Array<{ url: string; alt?: string }>>([])
 
   const canSubmit = title.trim().length >= 3 && categoryId.length > 0 && price.length > 0
+
+  const addImage = () => {
+    const url = imageUrl.trim()
+    if (!url) return
+    setImages((prev) => [...prev, { url, alt: title }])
+    setImageUrl('')
+  }
 
   return (
     <form
@@ -143,7 +152,12 @@ function CreateProductForm({ onSuccess }: { onSuccess: () => void }) {
                 vatRate: 20,
               },
             ],
-            images: [],
+            images: images.map((img, i) => ({
+              url: img.url,
+              alt: img.alt,
+              order: i,
+              isPrimary: i === 0,
+            })),
             attributes: [],
           },
           {
@@ -193,8 +207,50 @@ function CreateProductForm({ onSuccess }: { onSuccess: () => void }) {
         Описание
         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1" rows={3} />
       </Label>
+      <div>
+        <Label className="block">
+          Изображения (URL)
+          <div className="mt-1 flex gap-2">
+            <Input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="/products/my-item.jpg или https://…"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addImage()
+                }
+              }}
+            />
+            <Button type="button" variant="outline" onClick={addImage}>
+              Добавить
+            </Button>
+          </div>
+        </Label>
+        {images.length > 0 && (
+          <ul className="mt-2 space-y-1">
+            {images.map((img, i) => (
+              <li key={img.url} className="flex items-center gap-2 text-xs">
+                <span className="truncate text-muted-foreground">
+                  {i + 1}. {img.url}
+                  {i === 0 && <span className="ml-1 text-primary">(основное)</span>}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto text-xs text-destructive"
+                  onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+                >
+                  убрать
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <p className="text-xs text-muted-foreground">
-        UUID категории можно скопировать из каталога или админ-панели. Загрузка изображений и характеристик — в следующей итерации.
+        UUID категории можно скопировать из каталога или админ-панели. Первое изображение становится основным.
       </p>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onSuccess}>
