@@ -21,6 +21,7 @@ import {
   useAuth,
 } from '@/features/auth'
 import { homePathForRole, safeReturnPath } from '@/features/navigation'
+import { MarketplaceHomePage } from '@/features/home/HomePage'
 import { UserHome, UserProfile, UserSettings } from '@/features/users'
 import {
   AdminBillingPanel,
@@ -40,10 +41,12 @@ export function HomePage() {
   const auth = useAuth()
   const { returnTo } = useSearch({ from: '/' })
 
+  // Bootstrapping / error states: show the loader, not the public landing.
   if (auth.isBootstrapping) return <SessionLoadingSection />
   if (auth.sessionError && !auth.user) {
     return <SessionErrorSection retry={auth.retrySession} />
   }
+  // Authenticated users go to their role workspace (vendor/broker/admin/…).
   if (auth.user) {
     return (
       <HrefRedirect
@@ -51,10 +54,8 @@ export function HomePage() {
       />
     )
   }
-  const destination = returnTo
-    ? `/login?returnTo=${encodeURIComponent(returnTo)}`
-    : '/login'
-  return <HrefRedirect href={destination} />
+  // Anonymous visitors see the public marketplace landing.
+  return <MarketplaceHomePage />
 }
 
 export function LoginPage() {
