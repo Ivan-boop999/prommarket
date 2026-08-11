@@ -63,6 +63,26 @@ const productDetailRoute = createRoute({
   component: lazyRouteComponent(() => import('./pages'), 'ProductDetailPageWrapper'),
 })
 
+// Public buyer-side collection pages. These are browseable without an account —
+// a buyer can assemble a cart or shortlist before signing in to place an RFQ.
+const cartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/cart',
+  component: lazyRouteComponent(() => import('./pages'), 'CartPage'),
+})
+
+const favoritesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/favorites',
+  component: lazyRouteComponent(() => import('./pages'), 'FavoritesPage'),
+})
+
+const compareRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/compare',
+  component: lazyRouteComponent(() => import('./pages'), 'ComparePage'),
+})
+
 const userWorkspaceRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'userWorkspace',
@@ -219,6 +239,9 @@ const routeTree = rootRoute.addChildren([
   resetPasswordRoute,
   catalogRoute,
   productDetailRoute,
+  cartRoute,
+  favoritesRoute,
+  compareRoute,
   userWorkspaceRoute.addChildren([
     userHomeRoute,
     userProfileRoute,

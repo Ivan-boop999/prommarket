@@ -233,6 +233,10 @@ export function ProductDetailPageWrapper() {
   return <ProductDetailPage />
 }
 
+export { CartPage } from '@/features/marketplace-collections'
+export { ComparePage } from '@/features/marketplace-collections'
+export { FavoritesPage } from '@/features/marketplace-collections'
+
 function WorkspaceRoute({ role }: { role: UserRole }) {
   const auth = useAuth()
   const location = useLocation()
