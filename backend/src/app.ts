@@ -12,6 +12,7 @@ import { createAuthModule, type AuthHttpEnv } from './modules/auth'
 import { createBillingModule } from './modules/billing'
 import { createBrokerModule } from './modules/broker'
 import { createCatalogModule } from './modules/catalog'
+import { createDealsModule } from './modules/deals'
 import { createLeadsModule } from './modules/leads'
 import { createSubscriptionsModule } from './modules/subscriptions'
 import { createUploadsModule } from './modules/uploads'
@@ -64,6 +65,7 @@ export function createApp({
     storage: storage.storage,
   })
   const catalog = createCatalogModule({ db: prisma })
+  const deals = createDealsModule({ db: prisma, requireAuth: auth.requireAuth })
   const subscriptions = createSubscriptionsModule({
     db: prisma,
     requireAuth: auth.requireAuth,
@@ -143,6 +145,7 @@ export function createApp({
     app.use('/api/users/*', middleware)
     app.use('/api/admin/*', middleware)
     app.use('/api/uploads/*', middleware)
+    app.use('/api/deals/*', middleware)
     app.use('/api/subscriptions/*', middleware)
     app.use('/api/leads/*', middleware)
     app.use('/api/verification/*', middleware)
@@ -182,6 +185,7 @@ export function createApp({
   app.route('/api/admin', users.adminRoutes)
   app.route('/api/uploads', uploads.routes)
   app.route('/api/catalog', catalog.routes)
+  app.route('/api/deals', deals.routes)
   app.route('/api/subscriptions', subscriptions.routes)
   app.route('/api/leads', leads.routes)
   app.route('/api/verification', verification.routes)

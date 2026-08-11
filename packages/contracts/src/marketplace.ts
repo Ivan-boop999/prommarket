@@ -359,6 +359,52 @@ export function isDealStatusTransitionAllowed(
 export const terminalDealStatuses: DealStatus[] = ['completed', 'cancelled']
 
 // ---------------------------------------------------------------------------
+// DEAL INPUT SCHEMAS (RFQ creation, status change, messages)
+// ---------------------------------------------------------------------------
+
+export const createDealInputSchema = z
+  .object({
+    type: dealTypeSchema.default('rfq'),
+    title: z.string().trim().min(3).max(200),
+    description: z.string().trim().max(5000).optional(),
+    productId: z.uuid().optional(),
+    vendorId: z.uuid().optional(),
+    quantity: z.number().int().min(1).optional(),
+    deliveryDate: z.string().datetime().optional(),
+    deliveryAddress: z.string().trim().max(500).optional(),
+    notes: z.string().trim().max(2000).optional(),
+  })
+  .strict()
+
+export const changeDealStatusInputSchema = z
+  .object({
+    status: dealStatusSchema,
+    notes: z.string().trim().max(1000).optional(),
+  })
+  .strict()
+
+export const createDealMessageInputSchema = z
+  .object({
+    content: z.string().trim().min(1).max(5000),
+  })
+  .strict()
+
+export const dealsQuerySchema = paginationQuerySchema
+  .extend({
+    status: z.array(dealStatusSchema).optional(),
+    type: z.array(dealTypeSchema).optional(),
+    vendorId: z.uuid().optional(),
+    buyerId: z.uuid().optional(),
+    brokerId: z.uuid().optional(),
+  })
+  .strict()
+
+export type CreateDealInput = z.infer<typeof createDealInputSchema>
+export type ChangeDealStatusInput = z.infer<typeof changeDealStatusInputSchema>
+export type CreateDealMessageInput = z.infer<typeof createDealMessageInputSchema>
+export type DealsQuery = z.infer<typeof dealsQuerySchema>
+
+// ---------------------------------------------------------------------------
 // QUERY / PAGINATION (used by catalog endpoints in iteration 2)
 // ---------------------------------------------------------------------------
 
