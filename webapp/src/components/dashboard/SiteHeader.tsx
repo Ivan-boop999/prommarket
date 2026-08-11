@@ -1,6 +1,7 @@
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Typography } from '@/components/typography'
+import { NotificationsBell } from '@/features/notifications'
 
 export function SiteHeader({ title }: { title: string }) {
   return (
@@ -14,6 +15,9 @@ export function SiteHeader({ title }: { title: string }) {
         <Typography as="span" variant="h6">
           {title}
         </Typography>
+        <div className="ml-auto">
+          <NotificationsBell />
+        </div>
       </div>
     </header>
   )

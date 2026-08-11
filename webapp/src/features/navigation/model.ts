@@ -1,7 +1,7 @@
 import type { UserRole } from '@web-app-demo/contracts'
 
 export type UserRoutePath = '/app' | '/app/profile' | '/app/settings'
-export type AdminRoutePath = '/admin' | '/admin/users' | '/admin/settings' | '/admin/verification' | '/admin/billing'
+export type AdminRoutePath = '/admin' | '/admin/users' | '/admin/settings' | '/admin/verification' | '/admin/billing' | '/admin/analytics'
 export type VendorRoutePath =
   | '/vendor'
   | '/vendor/products'
@@ -29,6 +29,7 @@ const navigationByRole = {
   ],
   admin: [
     { label: 'Дашборд', to: '/admin' },
+    { label: 'Аналитика', to: '/admin/analytics' },
     { label: 'Пользователи', to: '/admin/users' },
     { label: 'Верификация', to: '/admin/verification' },
     { label: 'Биллинг', to: '/admin/billing' },

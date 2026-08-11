@@ -36,6 +36,7 @@ import {
   VendorHomePanel,
   VendorVerifyPanel,
 } from '@/features/monetization'
+import { AnalyticsPanel } from '@/features/admin-analytics'
 import { VendorProductsPanel } from '@/features/vendor-products'
 
 export function HomePage() {
@@ -138,6 +139,10 @@ export function AdminVerificationPage() {
 
 export function AdminBillingPage() {
   return <AdminBillingPanel />
+}
+
+export function AdminAnalyticsPage() {
+  return <AnalyticsPanel />
 }
 
 // --- Vendor pages ---

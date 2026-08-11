@@ -143,6 +143,12 @@ const adminBillingRoute = createRoute({
   component: lazyRouteComponent(() => import('./pages'), 'AdminBillingPage'),
 })
 
+const adminAnalyticsRoute = createRoute({
+  getParentRoute: () => adminWorkspaceRoute,
+  path: '/admin/analytics',
+  component: lazyRouteComponent(() => import('./pages'), 'AdminAnalyticsPage'),
+})
+
 // Vendor workspace — subscriptions, lead credits, verification, featured, add-ons.
 const vendorWorkspaceRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -258,6 +264,7 @@ const routeTree = rootRoute.addChildren([
     adminUsersRoute,
     adminVerificationRoute,
     adminBillingRoute,
+    adminAnalyticsRoute,
     adminSettingsRoute,
   ]),
   vendorWorkspaceRoute.addChildren([

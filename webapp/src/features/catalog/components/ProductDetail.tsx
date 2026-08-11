@@ -1,12 +1,12 @@
 import { Link, useParams } from '@tanstack/react-router'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { formatPrice, productStatusLabel, productStatusTone } from '../model'
 import { ProductReviews } from './ProductReviews'
+import { RfqButton } from './RfqForm'
 import { useProductDetailQuery } from '../queries'
 
 /**
@@ -199,9 +199,7 @@ export function ProductDetail() {
               Рейтинг: {product.vendorRating.toFixed(1)} · Сделок: {product.vendorTotalDeals}
             </p>
           </div>
-          <Button variant="outline" disabled>
-            Связаться с поставщиком
-          </Button>
+          <RfqButton product={product} />
         </CardContent>
       </Card>
     </div>
