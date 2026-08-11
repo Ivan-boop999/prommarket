@@ -9,6 +9,7 @@ import type { AppEnv } from './env'
 import { errorResponse, handleError, validationErrorHook } from './http/errors'
 import { createAuthSecurity, createFixedWindowRateLimit } from './http/security'
 import { createAuthModule, type AuthHttpEnv } from './modules/auth'
+import { createAdminCatalogModule } from './modules/admin-catalog'
 import { createBillingModule } from './modules/billing'
 import { createBrokerModule } from './modules/broker'
 import { createCatalogModule } from './modules/catalog'
@@ -17,6 +18,7 @@ import { createLeadsModule } from './modules/leads'
 import { createSubscriptionsModule } from './modules/subscriptions'
 import { createUploadsModule } from './modules/uploads'
 import { createUsersModule } from './modules/users'
+import { createVendorProductsModule } from './modules/vendor-products'
 import { createVerificationModule } from './modules/verification'
 import {
   apiCorsAllowedHeaders,
@@ -96,6 +98,16 @@ export function createApp({
     requireBroker: auth.requireBroker,
     requireAdmin: auth.requireAdmin,
   })
+  const vendorProducts = createVendorProductsModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireVendor: auth.requireVendor,
+  })
+  const adminCatalog = createAdminCatalogModule({
+    db: prisma,
+    requireAuth: auth.requireAuth,
+    requireAdmin: auth.requireAdmin,
+  })
   const app = new OpenAPIHono<AuthHttpEnv>({
     defaultHook: validationErrorHook,
   })
@@ -151,6 +163,8 @@ export function createApp({
     app.use('/api/verification/*', middleware)
     app.use('/api/billing/*', middleware)
     app.use('/api/broker/*', middleware)
+    app.use('/api/vendor-products/*', middleware)
+    app.use('/api/admin-catalog/*', middleware)
   }
   app.get('/', (c) => {
     return c.json({
@@ -191,6 +205,8 @@ export function createApp({
   app.route('/api/verification', verification.routes)
   app.route('/api/billing', billing.routes)
   app.route('/api/broker', broker.routes)
+  app.route('/api/vendor-products', vendorProducts.routes)
+  app.route('/api/admin-catalog', adminCatalog.routes)
 
   // Only the filesystem driver needs the backend to serve the URLs it signs. With an S3 driver
   // the browser uploads straight to the bucket and there is nothing to mount here.

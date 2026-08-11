@@ -543,3 +543,103 @@ export type SearchQuery = z.infer<typeof searchQuerySchema>
 export type SearchProductHit = z.infer<typeof searchProductHitSchema>
 export type SearchCategoryHit = z.infer<typeof searchCategoryHitSchema>
 export type SearchResult = z.infer<typeof searchResultSchema>
+
+// ---------------------------------------------------------------------------
+// VENDOR PRODUCT MANAGEMENT (iteration 6)
+// ---------------------------------------------------------------------------
+
+export const createProductInputSchema = z
+  .object({
+    title: z.string().trim().min(3).max(200),
+    slug: z.string().trim().min(3).max(200).optional(),
+    description: z.string().trim().max(10000).optional(),
+    sku: z.string().trim().max(100).optional(),
+    oemNumber: z.string().trim().max(100).optional(),
+    brand: z.string().trim().max(100).optional(),
+    model: z.string().trim().max(100).optional(),
+    year: z.number().int().min(1900).max(2100).optional(),
+    status: productStatusSchema.default('new'),
+    availability: productAvailabilitySchema.default('in_stock'),
+    leadTime: z.string().trim().max(100).optional(),
+    conditionNote: z.string().trim().max(2000).optional(),
+    categoryId: z.uuid(),
+    images: z
+      .array(
+        z
+          .object({
+            url: z.string().trim().min(1).max(1000),
+            alt: z.string().trim().max(200).optional(),
+            order: z.number().int().default(0),
+            isPrimary: z.boolean().default(false),
+          })
+          .strict(),
+      )
+      .default([]),
+    attributes: z
+      .array(
+        z
+          .object({
+            attributeId: z.uuid(),
+            value: attributeValueSchema,
+          })
+          .strict(),
+      )
+      .default([]),
+    prices: z
+      .array(
+        z
+          .object({
+            type: priceTypeSchema.default('fixed'),
+            price: decimalStringSchema.nullable().default(null),
+            currency: z.string().default('RUB'),
+            includesVat: z.boolean().default(true),
+            vatRate: z.number().int().min(0).max(100).default(20),
+            volumeFrom: z.number().int().min(1).optional(),
+            volumeTo: z.number().int().min(1).optional(),
+          })
+          .strict(),
+      )
+      .min(1, 'At least one price row is required'),
+  })
+  .strict()
+
+export const updateProductInputSchema = createProductInputSchema.partial()
+
+// ---------------------------------------------------------------------------
+// ADMIN CATEGORY / ATTRIBUTE MANAGEMENT (iteration 6)
+// ---------------------------------------------------------------------------
+
+export const createCategoryInputSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    slug: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(2000).optional(),
+    parentId: z.uuid().optional(),
+    order: z.number().int().default(0),
+    icon: z.string().trim().max(50).optional(),
+    image: z.string().trim().max(1000).optional(),
+  })
+  .strict()
+
+export const updateCategoryInputSchema = createCategoryInputSchema.partial()
+
+export const createAttributeInputSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    slug: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(2000).optional(),
+    type: attributeTypeSchema.default('text'),
+    unit: z.string().trim().max(50).optional(),
+    options: z.array(z.string()).optional(),
+    isFilterable: z.boolean().default(false),
+    isRequired: z.boolean().default(false),
+    order: z.number().int().default(0),
+    categoryIds: z.array(z.uuid()).default([]),
+  })
+  .strict()
+
+export type CreateProductInput = z.infer<typeof createProductInputSchema>
+export type UpdateProductInput = z.infer<typeof updateProductInputSchema>
+export type CreateCategoryInput = z.infer<typeof createCategoryInputSchema>
+export type UpdateCategoryInput = z.infer<typeof updateCategoryInputSchema>
+export type CreateAttributeInput = z.infer<typeof createAttributeInputSchema>
