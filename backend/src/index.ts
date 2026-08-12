@@ -32,7 +32,7 @@ const chatHandlers = createDealChatHandlers(dealsService)
  * an unhandled throw inside the handler; the try/catch here surfaces it as a
  * 500 instead of Bun's opaque 503.
  */
-const server = Bun.serve({
+const server = Bun.serve<DealChatSocketData>({
   port: runtime.env.PORT,
   websocket: {
     open: (ws) => chatHandlers.open(ws),
@@ -41,7 +41,7 @@ const server = Bun.serve({
   },
   async fetch(req, server) {
     const url = new URL(req.url)
-    // WS upgrade: /api/deals/:id/ws?token=<accessToken>
+    // WS upgrade: /api/deals/:id/ws?token=<accessToken>.
     const upgradeHeader = req.headers.get('upgrade') ?? ''
     if (
       url.pathname.startsWith('/api/deals/') &&
@@ -75,8 +75,22 @@ const server = Bun.serve({
       }
     }
 
-    // Everything else: the Hono app.
-    return app.fetch(req)
+    // Everything else: delegate to the Hono app. Wrap in try/catch so a thrown
+    // error surfaces as a logged 500 instead of Bun's opaque 503.
+    try {
+      return await app.fetch(req)
+    } catch (error) {
+      console.error('[index] app.fetch threw:', error)
+      return new Response(
+        JSON.stringify({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: error instanceof Error ? error.message : String(error),
+          },
+        }),
+        { status: 500, headers: { 'content-type': 'application/json' } },
+      )
+    }
   },
 })
 
