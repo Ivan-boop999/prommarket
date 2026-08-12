@@ -20,6 +20,7 @@ import { createNotificationsModule } from './modules/notifications'
 import { createReviewsModule } from './modules/reviews'
 import { createSubscriptionsModule } from './modules/subscriptions'
 import { createUploadsModule } from './modules/uploads'
+import { createVerificationUploadsModule } from './modules/verification-uploads'
 import { createUsersModule } from './modules/users'
 import { createVendorProductsModule } from './modules/vendor-products'
 import { createVerificationModule } from './modules/verification'
@@ -88,6 +89,11 @@ export function createApp({
     requireAuth: auth.requireAuth,
     requireVendor: auth.requireVendor,
     requireModerator: auth.requireModerator,
+  })
+  const verificationUploads = createVerificationUploadsModule({
+    requireAuth: auth.requireAuth,
+    requireVendor: auth.requireVendor,
+    storage,
   })
   const billing = createBillingModule({
     db: prisma,
@@ -175,6 +181,7 @@ export function createApp({
     app.use('/api/users/*', middleware)
     app.use('/api/admin/*', middleware)
     app.use('/api/uploads/*', middleware)
+    app.use('/api/verification-uploads/*', middleware)
     app.use('/api/deals/*', middleware)
     app.use('/api/subscriptions/*', middleware)
     app.use('/api/leads/*', middleware)
@@ -219,6 +226,7 @@ export function createApp({
   app.route('/api/users', users.userRoutes)
   app.route('/api/admin', users.adminRoutes)
   app.route('/api/uploads', uploads.routes)
+  app.route('/api/verification-uploads', verificationUploads.routes)
   app.route('/api/catalog', catalog.routes)
   app.route('/api/deals', deals.routes)
   app.route('/api/subscriptions', subscriptions.routes)
