@@ -1,0 +1,71 @@
+# Deploy spec for Render (free tier): backend API (Docker) + webapp static site.
+# Secrets (sync: false) are entered once at blueprint setup or via the Render API:
+#   DATABASE_URL            — Neon PostgreSQL connection string
+#   JWT_SECRET              — random 64+ hex chars
+#   WEBAPP_ORIGIN / CORS_ORIGINS — https://prommarket.onrender.com (webapp URL)
+#   PRIVATE_STORAGE_*       — Backblaze B2 (S3-compatible) bucket credentials
+#   VITE_API_URL            — https://prommarket-api.onrender.com (backend URL)
+services:
+  - type: web
+    name: prommarket-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./
+    plan: free
+    healthCheckPath: /health/ready
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "true"
+      - key: TRUSTED_PROXY_CLIENT_IP_HEADER
+        value: x-forwarded-for
+      - key: TRUSTED_PROXY_CLIENT_IP_POSITION
+        value: first
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: EMAIL_DELIVERY
+        value: disabled
+      - key: PRIVATE_STORAGE_DRIVER
+        value: s3
+      - key: PRIVATE_STORAGE_FORCE_PATH_STYLE
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: WEBAPP_ORIGIN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PRIVATE_STORAGE_REGION
+        sync: false
+      - key: PRIVATE_STORAGE_BUCKET
+        sync: false
+      - key: PRIVATE_STORAGE_ENDPOINT
+        sync: false
+      - key: PRIVATE_STORAGE_ACCESS_KEY_ID
+        sync: false
+      - key: PRIVATE_STORAGE_SECRET_ACCESS_KEY
+        sync: false
+
+  - type: web
+    name: prommarket
+    runtime: static
+    rootDir: .
+    buildCommand: npm i -g bun && bun install --filter @web-app-demo/webapp && cd webapp && bun run build
+    staticPublishPath: ./webapp/dist
+    autoDeploy: true
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
