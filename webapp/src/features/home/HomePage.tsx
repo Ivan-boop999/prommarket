@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getProduct, listCategories, listProducts } from '@/features/catalog'
 import { SearchSuggest } from '@/features/catalog'
-import { useRecentlyViewed } from '@/features/marketplace-collections'
+import { useRecentlyViewed } from '@/lib/use-recently-viewed'
 
 /**
  * Public landing page (ПромМаркет). Shown at `/` for anonymous visitors and as

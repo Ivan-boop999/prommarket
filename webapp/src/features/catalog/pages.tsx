@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-import { useCart, useFavorites } from '@/features/marketplace-collections'
+import { useCart, useFavorites } from '@/lib/use-local-collection'
 import { ProductCard } from './components/ProductCard'
 import { ProductDetail } from './components/ProductDetail'
 import { SearchSuggest } from './components/SearchSuggest'

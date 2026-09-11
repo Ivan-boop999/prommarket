@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getProduct } from '@/features/catalog'
 import { PageContainer, PageHeader } from '@/components/PageLayout'
-import { useCart, useCompare, useFavorites } from './use-local-collection'
+import { useCart, useCompare, useFavorites } from '@/lib/use-local-collection'
 
 /**
  * Cart, favorites, and compare pages. All three read product ids from the

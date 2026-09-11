@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { useFavorites } from '@/features/marketplace-collections'
+import { useFavorites } from '@/lib/use-local-collection'
 import { cn } from '@/lib/utils'
 
 import { formatPrice, productStatusLabel, productStatusTone } from '../model'
