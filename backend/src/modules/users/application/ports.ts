@@ -4,7 +4,7 @@ import type {
   AdminUsersQuery,
   AdminUsersResponse,
   UserRole,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 export type UserRecord = {
   id: string

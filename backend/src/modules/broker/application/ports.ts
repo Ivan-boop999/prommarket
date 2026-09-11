@@ -3,7 +3,7 @@ import type {
   BrokerFeeStats,
   BrokerFeesQuery,
   Invoice,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 /**
  * Broker success-fee ports.

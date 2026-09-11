@@ -1,4 +1,4 @@
-import { apiErrorSchema } from '@web-app-demo/contracts'
+import { apiErrorSchema } from '@prommarket/contracts'
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 

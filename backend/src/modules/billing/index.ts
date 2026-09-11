@@ -27,4 +27,4 @@ export function createBillingModule({ db, requireAuth, requireVendor, requireAdm
 }
 
 export { BillingService } from './application/billing-service'
-export { allocateInvoiceNumber, addDays, addMonths } from './infrastructure/mappers'
+export { allocateInvoiceNumber, addDays, addMonths, acquireTaggedXactLock, decimalToString } from "./infrastructure/mappers"

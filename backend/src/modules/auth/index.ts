@@ -131,3 +131,4 @@ function buildAuthService({
 export type { AuthHttpEnv }
 export type { LogoutCleanup, ProjectUser } from './application/ports'
 export type { AuthenticatedPrincipal } from './domain/user'
+export { verifyAccessToken } from "./infrastructure/access-tokens"

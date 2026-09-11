@@ -3,12 +3,12 @@ import type {
   InvoiceLineItem,
   SubscriptionPlan,
   VendorSubscription,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { DbClient } from '../../../db'
 import { SubscriptionFailure } from '../domain/errors'
 import type { SubscriptionRepository } from '../application/ports'
-import { addMonths, allocateInvoiceNumber, decimalToString } from '../../billing/infrastructure/mappers'
+import { addMonths, allocateInvoiceNumber, decimalToString } from '../../billing'
 
 // ---------------------------------------------------------------------------
 // DTO mappers (Prisma row → contract). These keep the wire shape exact and

@@ -24,7 +24,7 @@ const databaseUrlForHost =
   process.env.TEST_DATABASE_URL ?? defaultTestDatabaseUrl(defaultPostgresTestPort)
 const databaseUrlForContainer =
   process.env.BACKEND_DOCKER_SMOKE_DATABASE_URL ??
-  'postgresql://superuser:superpassword@postgres_test:5432/web_app_demo_test?schema=public'
+  'postgresql://superuser:superpassword@postgres_test:5432/prommarket_test?schema=public'
 assertTestDatabaseUrl(databaseUrlForHost)
 assertTestDatabaseUrl(databaseUrlForContainer, {
   allowEnvName: 'BACKEND_DOCKER_SMOKE_ALLOW_NON_TEST_DATABASE',
@@ -77,7 +77,7 @@ async function waitForComposePostgres() {
         '-U',
         'superuser',
         '-d',
-        'web_app_demo_test',
+        'prommarket_test',
       ],
       {
         cwd: repositoryRoot,

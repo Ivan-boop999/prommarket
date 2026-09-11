@@ -1,5 +1,5 @@
 import type { ServerWebSocket } from 'bun'
-import type { DealsService } from '../modules/deals/application/deals-service'
+import type { DealsService } from '../modules/deals'
 
 /**
  * Bun WebSocket deal chat.

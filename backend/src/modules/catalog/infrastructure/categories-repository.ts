@@ -1,4 +1,4 @@
-import type { Category, FlatCategory } from '@web-app-demo/contracts'
+import type { Category, FlatCategory } from '@prommarket/contracts'
 
 import type { DbClient } from '../../../db'
 import type { CategoryReader } from '../application/ports'

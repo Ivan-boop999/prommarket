@@ -161,7 +161,7 @@
 
 **Webapp**: React 19 + Vite + TanStack Router (code-based, не file-based — всё в `src/routes.tsx`) + TanStack Query. shadcn/ui (radix-vega style), Tailwind v4 (CSS-first, нет `tailwind.config.js`). Path alias `@/` → `src/`. Public-запросы через `publicClient` (без auth), authenticated — через `useAuth().transport`.
 
-**БД**: PostgreSQL 18 через Docker Compose (`docker-compose.yml`), порт 54329 (test: 54330). БД `web_app_demo`. UUIDv7 как PK (DB-generated).
+**БД**: PostgreSQL 18 через Docker Compose (`docker-compose.yml`), порт 54329 (test: 54330). БД `prommarket`. UUIDv7 как PK (DB-generated).
 
 ## Демо-данные
 

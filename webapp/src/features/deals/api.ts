@@ -4,7 +4,7 @@ import {
   dealsQuerySchema,
   paginatedResponseSchema,
   type DealsQuery,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { AuthenticatedTransport } from '@/platform/api'
 

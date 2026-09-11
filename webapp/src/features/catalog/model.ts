@@ -1,4 +1,4 @@
-import type { ProductStatus } from '@web-app-demo/contracts'
+import type { ProductStatus } from '@prommarket/contracts'
 
 /** Format a decimal-string price in RUB with Russian grouping. */
 export function formatPrice(value: string | null, currency = 'RUB'): string {

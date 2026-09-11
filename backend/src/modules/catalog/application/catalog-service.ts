@@ -6,7 +6,7 @@ import type {
   ProductsQuery,
   SearchResult,
   VendorSummary,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import { CatalogFailure } from '../domain/errors'
 import type { CategoryReader, Clock, ProductReader, VendorReader } from './ports'
@@ -79,4 +79,4 @@ export class CatalogService {
   }
 }
 
-export type { Category, FlatCategory, ProductDetail, ProductListItem, ProductsQuery, SearchResult, VendorSummary } from '@web-app-demo/contracts'
+export type { Category, FlatCategory, ProductDetail, ProductListItem, ProductsQuery, SearchResult, VendorSummary } from '@prommarket/contracts'

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/features/auth'
-import type { DealMessage } from '@web-app-demo/contracts'
+import type { DealMessage } from '@prommarket/contracts'
 import { useDealChat } from './useDealChat'
 import { getDeal } from './api'
 

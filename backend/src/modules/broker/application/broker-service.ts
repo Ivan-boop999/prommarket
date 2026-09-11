@@ -3,7 +3,7 @@ import type {
   BrokerFeeStats,
   BrokerFeesQuery,
   Invoice,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import { DEFAULT_BROKER_FEE_PERCENT, DEFAULT_CURRENCY } from '../domain/errors'
 import type { BrokerRepository, Clock } from './ports'

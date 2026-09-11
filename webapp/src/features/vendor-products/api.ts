@@ -5,7 +5,7 @@ import {
   type CreateProductInput,
   type ProductDetail,
   type UpdateProductInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import { z } from 'zod'
 
 import type { AuthenticatedTransport } from '@/platform/api'

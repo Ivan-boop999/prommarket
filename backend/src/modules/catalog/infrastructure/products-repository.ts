@@ -5,7 +5,7 @@ import type {
   SearchCategoryHit,
   SearchProductHit,
   SearchResult,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import type { Prisma } from '../../../generated/prisma/client'
 
 import type { DbClient } from '../../../db'

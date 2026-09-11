@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import type { DealsQuery } from '@web-app-demo/contracts'
+import type { DealsQuery } from '@prommarket/contracts'
 
 import { useAuth } from '@/features/auth'
 import { listMyDeals } from './api'

@@ -13,9 +13,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/features/auth'
-import type { ProductDetail, CreateDealInput } from '@web-app-demo/contracts'
+import type { ProductDetail, CreateDealInput } from '@prommarket/contracts'
 import type { AuthenticatedTransport } from '@/platform/api'
-import { dealDetailSchema } from '@web-app-demo/contracts'
+import { dealDetailSchema } from '@prommarket/contracts'
 
 /**
  * RFQ (Request for Quote) form on the product card. A signed-in buyer opens

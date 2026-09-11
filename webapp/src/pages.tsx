@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useRouter, useSearch } from '@tanstack/react-router'
-import type { UserDto, UserRole } from '@web-app-demo/contracts'
+import type { UserDto, UserRole } from '@prommarket/contracts'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import {
@@ -21,7 +21,7 @@ import {
   useAuth,
 } from '@/features/auth'
 import { homePathForRole, safeReturnPath } from '@/features/navigation'
-import { MarketplaceHomePage } from '@/features/home/HomePage'
+import { MarketplaceHomePage } from '@/features/home'
 import { UserHome, UserProfile, UserSettings } from '@/features/users'
 import {
   AdminBillingPanel,

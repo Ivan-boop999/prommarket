@@ -2,7 +2,7 @@ import type {
   CreateReviewInput,
   ProductReview,
   ReviewVendorReplyInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { DbClient } from '../../../db'
 import { ReviewFailure } from '../domain/errors'

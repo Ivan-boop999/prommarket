@@ -7,7 +7,7 @@ import type {
   PurchaseLeadCreditsInput,
   ReviewVerificationInput,
   ActivateAddOnInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import { useAuth } from '@/features/auth'
 import {

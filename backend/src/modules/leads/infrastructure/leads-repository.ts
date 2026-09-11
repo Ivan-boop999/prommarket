@@ -2,13 +2,13 @@ import type {
   Invoice,
   LeadCreditBalance,
   LeadCreditLedgerEntry,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import { Prisma } from '../../../generated/prisma/client'
 
 import type { DbClient } from '../../../db'
 import { LeadFailure } from '../domain/errors'
 import type { LeadRepository } from '../application/ports'
-import { acquireTaggedXactLock, allocateInvoiceNumber } from '../../billing/infrastructure/mappers'
+import { acquireTaggedXactLock, allocateInvoiceNumber } from '../../billing'
 
 type LedgerRow = {
   id: string

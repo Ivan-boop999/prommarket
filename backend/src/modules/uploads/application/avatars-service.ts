@@ -2,7 +2,7 @@ import type {
   AvatarResponse,
   CreateAvatarUploadRequest,
   CreateAvatarUploadResponse,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import { UploadsFailure } from '../domain/errors'
 import {

@@ -6,7 +6,7 @@ import type {
   InvoiceStatus,
   InvoiceType,
   VendorAddOn,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import {
   DEFAULT_ADDON_PRICE,

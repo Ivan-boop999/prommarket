@@ -5,9 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getProduct, listCategories, listProducts } from '@/features/catalog/api'
-import { SearchSuggest } from '@/features/catalog/components/SearchSuggest'
-import { useRecentlyViewed } from '@/features/marketplace-collections/use-recently-viewed'
+import { getProduct, listCategories, listProducts } from '@/features/catalog'
+import { SearchSuggest } from '@/features/catalog'
+import { useRecentlyViewed } from '@/features/marketplace-collections'
 
 /**
  * Public landing page (ПромМаркет). Shown at `/` for anonymous visitors and as

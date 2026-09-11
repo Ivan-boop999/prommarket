@@ -2,7 +2,7 @@ import type {
   Invoice,
   LeadCreditBalance,
   LeadCreditLedgerEntry,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 /**
  * Lead-credit ports.

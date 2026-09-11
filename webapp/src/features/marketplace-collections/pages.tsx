@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { getProduct } from '@/features/catalog/api'
+import { getProduct } from '@/features/catalog'
 import { PageContainer, PageHeader } from '@/components/PageLayout'
 import { useCart, useCompare, useFavorites } from './use-local-collection'
 

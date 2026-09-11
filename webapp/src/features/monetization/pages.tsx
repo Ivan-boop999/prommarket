@@ -1,4 +1,4 @@
-import type { UserDto } from '@web-app-demo/contracts'
+import type { UserDto } from '@prommarket/contracts'
 import { useState } from 'react'
 
 import { PageContainer, PageHeader } from '@/components/PageLayout'

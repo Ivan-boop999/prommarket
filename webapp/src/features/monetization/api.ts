@@ -24,7 +24,7 @@ import {
   type PurchaseLeadCreditsInput,
   type ReviewVerificationInput,
   type ActivateAddOnInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import { z } from 'zod'
 
 import { publicClient } from '@/platform/api/public-client'

@@ -3,7 +3,7 @@ import type {
   Invoice,
   SubscriptionPlan,
   VendorSubscription,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import { SubscriptionFailure } from '../domain/errors'
 import type { Clock, SubscriptionRepository } from './ports'

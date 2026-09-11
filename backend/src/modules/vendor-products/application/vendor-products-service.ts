@@ -2,8 +2,8 @@ import type {
   CreateProductInput,
   ProductDetail,
   UpdateProductInput,
-} from '@web-app-demo/contracts'
-import type { VendorProductRepository } from '../infrastructure/vendor-products-repository'
+} from '@prommarket/contracts'
+import type { VendorProductRepository } from './ports'
 
 export class VendorProductsService {
   constructor(private readonly repository: VendorProductRepository) {}

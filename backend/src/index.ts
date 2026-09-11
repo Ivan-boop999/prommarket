@@ -1,9 +1,9 @@
 import { createApp } from './app'
 import { createBackendRuntime } from './runtime'
 import { shutdownBackend } from './shutdown'
-import { verifyAccessToken } from './modules/auth/infrastructure/access-tokens'
-import { DealsService } from './modules/deals/application/deals-service'
-import { createPrismaDealsRepository } from './modules/deals/infrastructure/deals-repository'
+import { verifyAccessToken } from './modules/auth'
+import { DealsService } from './modules/deals'
+import { createPrismaDealsRepository } from './modules/deals'
 import { createDealChatHandlers, type DealChatSocketData } from './websocket/deal-chat'
 
 const runtime = createBackendRuntime()

@@ -5,11 +5,17 @@ import type {
   CreateCategoryInput,
   FlatCategory,
   UpdateCategoryInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { DbClient } from '../../../db'
 import { AdminCatalogFailure } from '../domain/errors'
-import { executeAdminCatalog } from '../transport/errors'
+/**
+ * Failure-to-HTTP mapping happens in the transport routes (executeAdminCatalog
+ * there); the application layer only propagates domain failures.
+ */
+async function executeAdminCatalog<T>(operation: () => Promise<T>): Promise<T> {
+  return operation()
+}
 
 /**
  * Admin catalog service — category/attribute CRUD. Lives behind requireAdmin.

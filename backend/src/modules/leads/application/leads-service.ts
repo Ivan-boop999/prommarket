@@ -4,7 +4,7 @@ import type {
   LeadCreditLedgerEntry,
   LeadCreditPrice,
   PurchaseLeadCreditsInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { Clock, LeadRepository } from './ports'
 

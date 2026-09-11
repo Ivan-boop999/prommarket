@@ -37,3 +37,4 @@ export function createDealsModule({ db, requireAuth }: CreateDealsModuleOptions)
 }
 
 export { DealsService } from './application/deals-service'
+export { createPrismaDealsRepository } from "./infrastructure/deals-repository"

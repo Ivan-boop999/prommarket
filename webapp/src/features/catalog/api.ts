@@ -18,7 +18,7 @@ import {
   type SearchQuery,
   type SearchResult,
   type VendorSummary,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import { z } from 'zod'
 
 import { publicClient } from '@/platform/api/public-client'

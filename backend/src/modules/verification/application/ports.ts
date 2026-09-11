@@ -2,7 +2,7 @@ import type {
   ReviewVerificationInput,
   VerificationRequest,
   CreateVerificationRequestInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 /**
  * Verification ports.

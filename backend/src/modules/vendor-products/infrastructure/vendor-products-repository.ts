@@ -2,11 +2,14 @@ import type {
   CreateProductInput,
   ProductDetail,
   UpdateProductInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import { Prisma } from '../../../generated/prisma/client'
 
 import type { DbClient } from '../../../db'
 import { VendorProductFailure } from '../domain/errors'
+import type { VendorProductRepository } from '../application/ports'
+
+export type { VendorProductRepository }
 
 /**
  * Vendor product CRUD repository.
@@ -22,14 +25,6 @@ function slugify(input: string): string {
     .replace(/[^a-z0-9а-я]+/gi, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 200)
-}
-
-export type VendorProductRepository = {
-  listByVendor(vendorId: string): Promise<ProductDetail[]>
-  findByVendor(vendorId: string, productId: string): Promise<ProductDetail | null>
-  create(vendorId: string, input: CreateProductInput): Promise<ProductDetail>
-  update(vendorId: string, productId: string, input: UpdateProductInput): Promise<ProductDetail>
-  remove(vendorId: string, productId: string): Promise<void>
 }
 
 type ProductDetailRow = {

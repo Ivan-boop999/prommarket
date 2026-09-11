@@ -4,7 +4,7 @@ import type {
   FeaturedPlacement,
   Invoice,
   VendorAddOn,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 /**
  * Billing ports: featured placements, SaaS add-ons, shared invoice listing.

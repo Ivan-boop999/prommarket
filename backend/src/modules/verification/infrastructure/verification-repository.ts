@@ -3,12 +3,12 @@ import type {
   ReviewVerificationInput,
   VerificationDocument,
   VerificationRequest,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { DbClient } from '../../../db'
 import { VerificationFailure, VERIFICATION_VALIDITY_MONTHS } from '../domain/errors'
 import type { VerificationRepository } from '../application/ports'
-import { addMonths } from '../../billing/infrastructure/mappers'
+import { addMonths } from '../../billing'
 
 type DocumentRow = {
   id: string

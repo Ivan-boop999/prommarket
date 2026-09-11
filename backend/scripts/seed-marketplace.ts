@@ -22,7 +22,7 @@ const DEMO_PASSWORD = 'marketplace-demo'
 
 const db = createPrisma(
   process.env.DATABASE_URL ??
-    'postgresql://superuser:superpassword@localhost:54329/web_app_demo?schema=public',
+    'postgresql://superuser:superpassword@localhost:54329/prommarket?schema=public',
 )
 
 async function main() {

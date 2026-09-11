@@ -5,7 +5,7 @@ import type {
   Invoice,
   InvoiceLineItem,
   VendorAddOn,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import { Prisma } from '../../../generated/prisma/client'
 
 import type { DbClient } from '../../../db'

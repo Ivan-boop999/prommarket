@@ -4,7 +4,7 @@ import type {
   DealHistoryEntry,
   DealMessage,
   DealsQuery,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { DbClient } from '../../../db'
 import { DealFailure } from '../domain/errors'

@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react'
-import type { UserDto } from '@web-app-demo/contracts'
+import type { UserDto } from '@prommarket/contracts'
 
 import { PageContainer, PageHeader } from '@/components/PageLayout'
 import { Badge } from '@/components/ui/badge'

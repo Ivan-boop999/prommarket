@@ -6,7 +6,7 @@ import {
   type DealMessage,
   type DealsQuery,
   type CreateDealInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import { DealFailure } from '../domain/errors'
 import type { Clock, DealRepository } from './ports'

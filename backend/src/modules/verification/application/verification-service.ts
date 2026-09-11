@@ -2,11 +2,11 @@ import type {
   CreateVerificationRequestInput,
   ReviewVerificationInput,
   VerificationRequest,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import { VERIFICATION_VALIDITY_MONTHS, VerificationFailure } from '../domain/errors'
 import type { Clock, VerificationRepository } from './ports'
-import { addMonths } from '../../billing/infrastructure/mappers'
+import { addMonths } from '../../billing'
 
 export type VerificationServiceDependencies = {
   clock: Clock

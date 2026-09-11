@@ -8,12 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  useCart,
-  useCompare,
-  useFavorites,
-} from '@/features/marketplace-collections/use-local-collection'
-import { useRecentlyViewed } from '@/features/marketplace-collections/use-recently-viewed'
+import { useCart, useCompare, useFavorites } from '@/features/marketplace-collections'
+import { useRecentlyViewed } from '@/features/marketplace-collections'
 
 import { formatPrice, productStatusLabel, productStatusTone } from '../model'
 import { listProducts } from '../api'

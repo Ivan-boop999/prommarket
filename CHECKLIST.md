@@ -20,7 +20,7 @@ Answer cells hold `_unanswered_` until the question is asked, and `n/a` when the
 | Question | Answer |
 | --- | --- |
 | New project from this template, or work on the template itself? | New project from this template |
-| Project name / slug | `prommarket` — ПромМаркет, B2B-маркетплейс промышленного оборудования (переименование идентификаторов шаблона `web_app_demo` отложено) |
+| Project name / slug | `prommarket` — ПромМаркет, B2B-маркетплейс промышленного оборудования (переименование идентификаторов шаблона выполнено 2026-08-26: `web_app_demo`→`prommarket` везде, пакеты `@prommarket/*`, bun.lock перегенерирован, Prisma зафиксирован на 7.9.0, architecture:check зелёный) |
 | Your own GitHub repository URL, if you have one | None yet — `origin` detached, publishing not configured |
 
 If no GitHub destination is chosen, the repository is left without `origin` and publishing stays unconfigured. The template remote is detached during setup unless this checkout is explicitly for improving the template.
@@ -120,7 +120,7 @@ recording it as `removed`. Payments are never half-present and are never reintro
 | --- | --- |
 | Is deployment needed now, or local-only for the moment? | Local-only for the moment |
 | Where are your users, and must the data stay in Russia? | Not decided yet — audience unknown until the product is chosen |
-| Hosting, picked by the agent from the answer above: DigitalOcean / Yandex Cloud / own server | Not picked — deployment deferred. All three hosting paths remain in the repo (no tooling deleted yet); the choice will be made and recorded here when deployment is requested. |
+| Hosting, picked by the agent from the answer above: DigitalOcean / Yandex Cloud / own server | **Render (free tier)** — осознанное решение владельца от 2026-08-26: проект задеплоен бесплатно на Render (`render.yaml` в корне: api-сервис Docker + статический webapp), БД Neon, файлы Backblaze B2. Это осознанное отклонение от DO/YC-путей шаблона ради нулевой стоимости; при появлении бюджета мигрировать на Yandex Cloud (дока `docs/YANDEX_CLOUD.md` сохранена как путь миграции). |
 | Production domains / URLs, per surface (API, webapp, website, media/CDN) | n/a — local-only. Local URLs: API http://localhost:3000, webapp http://localhost:5173 |
 | Which surfaces are released first | n/a — nothing deployed yet |
 
@@ -207,7 +207,7 @@ Verified by the agent during setup, not asked.
 
 - [x] Durable answers above filled in, install status set to `completed YYYY-MM-DD`
 - [x] Validation scope recorded for this project (which suites run before a change is called done): backend responds 200 on `/` and `/health`; webapp responds 200 on `/`; Prisma migrate deploy applied 3 migrations; dev:seed created admin@example.com + user@example.com. Full test/E2E suites not run yet (deferred until product work starts).
-- [ ] Project renamed from the template identifiers (`web_app_demo`, `web-app-demo`, `vibecoding-template`), `bun.lock` regenerated — **deferred**: rename deliberately postponed until the product name is decided, to avoid renaming twice.
+- [ ] Project renamed from the template identifiers (`prommarket`, `prommarket`, `vibecoding-template`), `bun.lock` regenerated — **deferred**: rename deliberately postponed until the product name is decided, to avoid renaming twice.
 - [ ] Deferred-surface notes added to the READMEs of surfaces that are not active — **deferred**: no product yet, so no feature routing decisions to document.
 - [ ] `Bootstrap-Only Instructions` blocks deleted from `AGENTS.md` and `CLAUDE.md` — **deferred**: kept until the product is chosen and the intake is fully closed, per template guidance to finish feature routing first.
 - [x] Local URLs, commands run, and anything the user must authorize manually reported back to the user

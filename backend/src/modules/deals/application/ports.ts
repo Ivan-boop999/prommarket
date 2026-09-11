@@ -5,7 +5,7 @@ import type {
   DealHistoryEntry,
   DealMessage,
   DealsQuery,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 /**
  * Deal ports. The repository owns Prisma access and the atomic deal-number

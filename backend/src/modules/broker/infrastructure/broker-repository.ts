@@ -4,13 +4,13 @@ import type {
   BrokerFeesQuery,
   Invoice,
   InvoiceLineItem,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import { Prisma } from '../../../generated/prisma/client'
 
 import type { DbClient } from '../../../db'
 import { BrokerFailure } from '../domain/errors'
 import type { BrokerRepository } from '../application/ports'
-import { addDays, allocateInvoiceNumber } from '../../billing/infrastructure/mappers'
+import { addDays, allocateInvoiceNumber } from '../../billing'
 
 type FeeRow = {
   id: string

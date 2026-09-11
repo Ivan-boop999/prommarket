@@ -1,4 +1,4 @@
-import type { ProductStatus } from '@web-app-demo/contracts'
+import type { ProductStatus } from '@prommarket/contracts'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-import { useCart, useFavorites } from '@/features/marketplace-collections/use-local-collection'
+import { useCart, useFavorites } from '@/features/marketplace-collections'
 import { ProductCard } from './components/ProductCard'
 import { ProductDetail } from './components/ProductDetail'
 import { SearchSuggest } from './components/SearchSuggest'
@@ -235,7 +235,7 @@ function CategoryTree({
   selectedId,
   onSelect,
 }: {
-  categories: import('@web-app-demo/contracts').Category[] | undefined
+  categories: import('@prommarket/contracts').Category[] | undefined
   loading: boolean
   selectedId: string | undefined
   onSelect: (id: string | undefined) => void

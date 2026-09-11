@@ -2,7 +2,7 @@ import type {
   PasswordResetRequestResponse,
   RegisterPayload,
   UserDto,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { SessionMetadata } from '../domain/session'
 import type { AuthUserRecord } from '../domain/user'

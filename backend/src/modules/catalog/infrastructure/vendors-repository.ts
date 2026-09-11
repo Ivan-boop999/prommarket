@@ -1,4 +1,4 @@
-import type { VendorSummary } from '@web-app-demo/contracts'
+import type { VendorSummary } from '@prommarket/contracts'
 
 import type { DbClient } from '../../../db'
 import type { VendorReader } from '../application/ports'

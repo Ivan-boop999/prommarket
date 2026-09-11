@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import type { DealMessage } from '@web-app-demo/contracts'
+import type { DealMessage } from '@prommarket/contracts'
 
 /**
  * useDealChat — WebSocket hook for the deal chat.

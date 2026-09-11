@@ -54,7 +54,7 @@ services:
     name: prommarket
     runtime: static
     rootDir: .
-    buildCommand: npm i -g bun && bun install --filter @web-app-demo/webapp && cd webapp && bun run build
+    buildCommand: npm i -g bun && bun install --filter @prommarket/webapp && cd webapp && bun run build
     staticPublishPath: ./webapp/dist
     autoDeploy: true
     pullRequestPreviewsEnabled: false

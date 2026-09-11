@@ -2,7 +2,7 @@ import type {
   Invoice,
   SubscriptionPlan,
   VendorSubscription,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 /**
  * Subscription write ports.

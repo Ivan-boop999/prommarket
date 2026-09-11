@@ -6,7 +6,7 @@ import type {
   ProductsQuery,
   SearchResult,
   VendorSummary,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 /**
  * Catalog application ports.

@@ -7,3 +7,5 @@ export {
   useProductDetailQuery,
 } from './queries'
 export { formatPrice, productStatusLabel } from './model'
+export { getProduct, listCategories, listProducts, searchCatalog } from './api'
+export { SearchSuggest } from './components/SearchSuggest'

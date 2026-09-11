@@ -103,7 +103,7 @@ export function localPrivateStorageCorsRule(allowedOrigins, allowedHeaders, expo
 }
 
 export function defaultTestDatabaseUrl(port = defaultPostgresTestPort) {
-  return `postgresql://superuser:superpassword@localhost:${port}/web_app_demo_test?schema=public`
+  return `postgresql://superuser:superpassword@localhost:${port}/prommarket_test?schema=public`
 }
 
 export function postgresPortFromDatabaseUrl(databaseUrl) {

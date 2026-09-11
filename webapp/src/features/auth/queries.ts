@@ -9,7 +9,7 @@ import type {
   LoginRequest,
   MeResponse,
   RegisterRequest,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 
 import type { AuthApi } from './api'
 

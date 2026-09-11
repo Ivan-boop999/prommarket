@@ -1,11 +1,11 @@
-import type { ProductListItem } from '@web-app-demo/contracts'
+import type { ProductListItem } from '@prommarket/contracts'
 import { FavouriteCircleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link } from '@tanstack/react-router'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { useFavorites } from '@/features/marketplace-collections/use-local-collection'
+import { useFavorites } from '@/features/marketplace-collections'
 import { cn } from '@/lib/utils'
 
 import { formatPrice, productStatusLabel, productStatusTone } from '../model'

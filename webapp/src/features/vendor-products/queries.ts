@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CreateProductInput, UpdateProductInput } from '@web-app-demo/contracts'
+import type { CreateProductInput, UpdateProductInput } from '@prommarket/contracts'
 
 import { useAuth } from '@/features/auth'
 import {

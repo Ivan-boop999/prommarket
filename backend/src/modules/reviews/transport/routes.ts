@@ -5,7 +5,7 @@ import {
   reviewVendorReplyInputSchema,
   type CreateReviewInput,
   type ReviewVendorReplyInput,
-} from '@web-app-demo/contracts'
+} from '@prommarket/contracts'
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { z } from 'zod'
 
