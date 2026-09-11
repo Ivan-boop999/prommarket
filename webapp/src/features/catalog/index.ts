@@ -9,3 +9,4 @@ export {
 export { formatPrice, productStatusLabel } from './model'
 export { getProduct, listCategories, listProducts, searchCatalog } from './api'
 export { SearchSuggest } from './components/SearchSuggest'
+export { ProductCard } from './components/ProductCard'
