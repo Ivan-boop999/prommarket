@@ -249,7 +249,7 @@ function EmptyState({ message }: { message: string }) {
         {message}
         <div className="mt-4">
           <Button asChild variant="outline">
-            <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined }}>Перейти в каталог</Link>
+            <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined, priceMin: undefined, priceMax: undefined }}>Перейти в каталог</Link>
           </Button>
         </div>
       </CardContent>

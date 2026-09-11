@@ -1,11 +1,24 @@
 import { Link, useParams } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { FavouriteCircleIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useEffect } from 'react'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  useCart,
+  useCompare,
+  useFavorites,
+} from '@/features/marketplace-collections/use-local-collection'
+import { useRecentlyViewed } from '@/features/marketplace-collections/use-recently-viewed'
 
 import { formatPrice, productStatusLabel, productStatusTone } from '../model'
+import { listProducts } from '../api'
 import { ProductReviews } from './ProductReviews'
+import { ProductCard } from './ProductCard'
 import { RfqButton } from './RfqForm'
 import { useProductDetailQuery } from '../queries'
 
@@ -13,12 +26,40 @@ import { useProductDetailQuery } from '../queries'
  * Product detail page. Reaches the catalog via TanStack Router param
  * (`/catalog/$productId`), so the URL is shareable and the back button works.
  *
- * Kept compact for iteration 2: gallery, attributes, pricing tiers, vendor
- * block, and a back link. RFQ, compare, reviews land in later iterations.
+ * Composition: gallery, attributes, pricing tiers, vendor block, reviews, plus
+ * the Avito-style buyer affordances — view counter, favorites/compare/cart
+ * actions, similar products from the same category, and a recently-viewed
+ * mark that feeds the home page history section.
  */
 export function ProductDetail() {
   const { productId } = useParams({ strict: false }) as { productId?: string }
   const query = useProductDetailQuery(productId)
+  const product = query.data
+
+  const favorites = useFavorites()
+  const compare = useCompare()
+  const cart = useCart()
+  const { push: pushRecentlyViewed } = useRecentlyViewed()
+
+  useEffect(() => {
+    if (product?.id) pushRecentlyViewed(product.id)
+  }, [product?.id, pushRecentlyViewed])
+
+  const similarQuery = useQuery({
+    queryKey: ['catalog', 'products', 'similar', product?.categoryId],
+    queryFn: () =>
+      listProducts({
+        page: 1,
+        pageSize: 5,
+        categoryId: product!.categoryId,
+        sortBy: 'views',
+        sortDir: 'desc',
+      }),
+    enabled: Boolean(product?.categoryId),
+  })
+  const similar = (similarQuery.data?.items ?? [])
+    .filter((item) => item.id !== product?.id)
+    .slice(0, 4)
 
   if (query.isLoading) {
     return (
@@ -36,14 +77,22 @@ export function ProductDetail() {
     )
   }
 
-  if (query.isError || !query.data) {
+  if (query.isError || !product) {
     return (
       <div className="mx-auto max-w-5xl p-6">
         <p className="text-muted-foreground">
           Не удалось загрузить товар.{' '}
           <Link
             to="/catalog"
-            search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined }}
+            search={{
+              categoryId: undefined,
+              search: undefined,
+              status: undefined,
+              sortBy: undefined,
+              page: undefined,
+              priceMin: undefined,
+              priceMax: undefined,
+            }}
             className="text-foreground underline"
           >
             ← В каталог
@@ -53,14 +102,24 @@ export function ProductDetail() {
     )
   }
 
-  const product = query.data
+  const isFavorite = favorites.has(product.id)
+  const inCompare = compare.has(product.id)
+  const inCart = cart.has(product.id)
 
   return (
     <>
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <Link
         to="/catalog"
-        search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined }}
+        search={{
+          categoryId: undefined,
+          search: undefined,
+          status: undefined,
+          sortBy: undefined,
+          page: undefined,
+          priceMin: undefined,
+          priceMax: undefined,
+        }}
         className="text-sm text-muted-foreground hover:text-foreground"
       >
         ← К каталогу
@@ -125,6 +184,7 @@ export function ProductDetail() {
               {product.brand && <span>Бренд: {product.brand}</span>}
               {product.sku && <span>SKU: {product.sku}</span>}
               {product.year && <span>Год: {product.year}</span>}
+              <span>{product.views} просмотров</span>
             </div>
           </div>
 
@@ -134,6 +194,36 @@ export function ProductDetail() {
             </div>
             {product.leadTime && (
               <p className="mt-1 text-sm text-muted-foreground">Срок поставки: {product.leadTime}</p>
+            )}
+          </div>
+
+          {/* Buyer actions */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={isFavorite ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => favorites.toggle(product.id)}
+              aria-pressed={isFavorite}
+            >
+              <HugeiconsIcon icon={FavouriteCircleIcon} className="mr-1 size-4" />
+              {isFavorite ? 'В избранном' : 'В избранное'}
+            </Button>
+            <Button
+              variant={inCompare ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => compare.toggle(product.id)}
+              aria-pressed={inCompare}
+            >
+              {inCompare ? 'В сравнении' : 'Сравнить'}
+            </Button>
+            {inCart ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/cart">В корзине →</Link>
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => cart.add(product.id)}>
+                В корзину
+              </Button>
             )}
           </div>
 
@@ -209,6 +299,18 @@ export function ProductDetail() {
           <RfqButton product={product} />
         </CardContent>
       </Card>
+
+      {/* Similar products */}
+      {similar.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-xl font-semibold">Похожие товары</h2>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {similar.map((item) => (
+              <ProductCard key={item.id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
     <ProductReviews productId={product.id} />
     </>

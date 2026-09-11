@@ -1,6 +1,6 @@
 import type { ProductStatus } from '@web-app-demo/contracts'
-import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useMemo } from 'react'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
+import { useCart, useFavorites } from '@/features/marketplace-collections/use-local-collection'
 import { ProductCard } from './components/ProductCard'
 import { ProductDetail } from './components/ProductDetail'
+import { SearchSuggest } from './components/SearchSuggest'
 import { useCatalogCategoriesQuery, useCatalogProductsQuery } from './queries'
 import { productStatusLabel } from './model'
 
@@ -41,6 +43,8 @@ const SORT_OPTIONS = [
   { value: 'updatedAt', label: 'По обновлению' },
   { value: 'title', label: 'По названию' },
   { value: 'views', label: 'По популярности' },
+  { value: 'priceAsc', label: 'Сначала дешёвые' },
+  { value: 'priceDesc', label: 'Сначала дорогие' },
 ] as const
 const PAGE_SIZE = 12
 
@@ -49,29 +53,38 @@ type CatalogSearch = {
   search?: string
   status?: string
   sortBy?: string
+  priceMin?: string
+  priceMax?: string
   page?: number
 }
 
 export function CatalogPage() {
   const navigate = useNavigate({ from: '/catalog' })
   const search = useSearch({ strict: false }) as CatalogSearch
+  const favorites = useFavorites()
+  const cart = useCart()
 
   const activeStatuses = useMemo<ProductStatus[]>(
     () => (search.status ? (search.status.split(',') as ProductStatus[]) : []),
     [search.status],
   )
 
+  const sortValue = search.sortBy ?? 'createdAt'
+  const isPriceSort = sortValue === 'priceAsc' || sortValue === 'priceDesc'
+
   const productsQuery = useMemo(
     () => ({
       page: search.page ?? 1,
       pageSize: PAGE_SIZE,
-      sortBy: (search.sortBy ?? 'createdAt') as 'createdAt',
-      sortDir: 'desc' as const,
+      sortBy: (isPriceSort ? 'price' : sortValue) as 'createdAt',
+      sortDir: (sortValue === 'priceAsc' ? 'asc' : 'desc') as 'desc',
       categoryId: search.categoryId,
       search: search.search,
       status: activeStatuses.length > 0 ? activeStatuses : undefined,
+      priceMin: search.priceMin !== undefined ? Number(search.priceMin) : undefined,
+      priceMax: search.priceMax !== undefined ? Number(search.priceMax) : undefined,
     }),
-    [search.page, search.sortBy, search.categoryId, search.search, activeStatuses],
+    [search.page, sortValue, isPriceSort, search.categoryId, search.search, search.priceMin, search.priceMax, activeStatuses],
   )
 
   const categoriesQuery = useCatalogCategoriesQuery()
@@ -104,6 +117,14 @@ export function CatalogPage() {
             <Button variant="outline" size="sm" asChild>
               <a href="/">Главная</a>
             </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/favorites">
+                Избранное{favorites.count > 0 ? ` · ${favorites.count}` : ''}
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/cart">Корзина{cart.count > 0 ? ` · ${cart.count}` : ''}</Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -116,6 +137,11 @@ export function CatalogPage() {
             loading={categoriesQuery.isLoading}
             selectedId={search.categoryId}
             onSelect={(categoryId) => updateSearch({ categoryId })}
+          />
+          <PriceFilter
+            priceMin={search.priceMin}
+            priceMax={search.priceMax}
+            onCommit={(priceMin, priceMax) => updateSearch({ priceMin, priceMax })}
           />
           <FilterGroup title="Состояние">
             <div className="flex flex-wrap gap-2">
@@ -135,20 +161,13 @@ export function CatalogPage() {
 
         {/* Main: search + sort + grid */}
         <main className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Input
-              type="search"
-              placeholder="Поиск по названию, SKU, бренду…"
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <SearchSuggest
+              key={search.search ?? ''}
               defaultValue={search.search ?? ''}
-              onChange={(e) => {
-                const value = e.target.value.trim()
-                // Debounce via the URL: only commit on blur / Enter to avoid
-                // spamming navigate. A dedicated debounce can replace this.
-                if (e.type === 'blur' || (e.nativeEvent as KeyboardEvent).key === 'Enter') {
-                  updateSearch({ search: value || undefined })
-                }
-              }}
+              placeholder="Поиск по названию, SKU, бренду…"
               className="sm:max-w-md"
+              onCommit={(q) => updateSearch({ search: q || undefined })}
             />
             <select
               value={search.sortBy ?? 'createdAt'}
@@ -294,6 +313,63 @@ function FilterGroup({ title, children }: { title: string; children: React.React
       </h2>
       {children}
     </div>
+  )
+}
+
+/**
+ * Avito-style price range filter. Commits on Enter/blur; drafts that are not
+ * plain non-negative integers are treated as unset.
+ */
+function PriceFilter({
+  priceMin,
+  priceMax,
+  onCommit,
+}: {
+  priceMin: string | undefined
+  priceMax: string | undefined
+  onCommit: (priceMin: string | undefined, priceMax: string | undefined) => void
+}) {
+  const [min, setMin] = useState(priceMin ?? '')
+  const [max, setMax] = useState(priceMax ?? '')
+
+  // Re-sync the draft when the URL changes elsewhere (back/forward, reset).
+  useEffect(() => {
+    setMin(priceMin ?? '')
+    setMax(priceMax ?? '')
+  }, [priceMin, priceMax])
+
+  const commit = () => {
+    const nextMin = /^\d+$/.test(min.trim()) ? min.trim() : undefined
+    const nextMax = /^\d+$/.test(max.trim()) ? max.trim() : undefined
+    if (nextMin !== priceMin || nextMax !== priceMax) onCommit(nextMin, nextMax)
+  }
+
+  return (
+    <FilterGroup title="Цена, ₽">
+      <div className="flex items-center gap-2">
+        <Input
+          inputMode="numeric"
+          placeholder="от"
+          value={min}
+          onChange={(e) => setMin(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === 'Enter' && commit()}
+          className="h-8"
+          aria-label="Цена от"
+        />
+        <span className="text-muted-foreground">—</span>
+        <Input
+          inputMode="numeric"
+          placeholder="до"
+          value={max}
+          onChange={(e) => setMax(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === 'Enter' && commit()}
+          className="h-8"
+          aria-label="Цена до"
+        />
+      </div>
+    </FilterGroup>
   )
 }
 

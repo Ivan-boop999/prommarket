@@ -306,6 +306,14 @@ function catalogSearchParser(search: Record<string, unknown>) {
     search: typeof search.search === 'string' ? search.search : undefined,
     status: typeof search.status === 'string' ? search.status : undefined,
     sortBy: typeof search.sortBy === 'string' ? search.sortBy : undefined,
+    priceMin:
+      typeof search.priceMin === 'string' && /^\d+$/.test(search.priceMin)
+        ? search.priceMin
+        : undefined,
+    priceMax:
+      typeof search.priceMax === 'string' && /^\d+$/.test(search.priceMax)
+        ? search.priceMax
+        : undefined,
     page,
   }
 }

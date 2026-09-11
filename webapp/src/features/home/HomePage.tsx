@@ -1,26 +1,23 @@
 import { Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowRight01Icon, Search01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useState } from 'react'
+import { useQueries, useQuery } from '@tanstack/react-query'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { listCategories, listProducts } from '@/features/catalog/api'
+import { getProduct, listCategories, listProducts } from '@/features/catalog/api'
+import { SearchSuggest } from '@/features/catalog/components/SearchSuggest'
+import { useRecentlyViewed } from '@/features/marketplace-collections/use-recently-viewed'
 
 /**
  * Public landing page (ПромМаркет). Shown at `/` for anonymous visitors and as
  * the role-redirect target's public face before login. Showcases the catalog:
- * hero with search, category grid, and featured/popular products.
+ * hero with search suggestions, category grid, popular products, and the
+ * recently-viewed history.
  *
  * No auth dependency — everything reads through the public catalog client.
  */
 export function MarketplaceHomePage() {
-  const [search, setSearch] = useState('')
-
   const categoriesQuery = useQuery({
     queryKey: ['catalog', 'categories'],
     queryFn: () => listCategories(),
@@ -50,40 +47,14 @@ export function MarketplaceHomePage() {
           B2B-маркетплейс промышленного оборудования. Надёжные поставщики,
           проверенные товары, прямые сделки.
         </p>
-        <form
-          className="mx-auto flex max-w-xl gap-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            const q = search.trim()
-            window.location.href = q
-              ? `/catalog?search=${encodeURIComponent(q)}`
-              : '/catalog'
-          }}
-        >
-          <div className="relative flex-1">
-            <HugeiconsIcon
-              icon={Search01Icon}
-              className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Поиск оборудования, товаров, брендов…"
-              className="pl-10"
-            />
-          </div>
-          <Button type="submit">
-            Найти
-            <HugeiconsIcon icon={ArrowRight01Icon} className="ml-1 size-4" />
-          </Button>
-        </form>
+        <SearchSuggest buttonLabel="Найти" className="mx-auto max-w-xl text-left" />
       </section>
 
       {/* Categories */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Категории</h2>
-          <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined }} className="text-sm text-primary hover:underline">
+          <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined, priceMin: undefined, priceMax: undefined }} className="text-sm text-primary hover:underline">
             Все категории →
           </Link>
         </div>
@@ -93,7 +64,7 @@ export function MarketplaceHomePage() {
                 <Skeleton key={i} className="h-24 w-full rounded-lg" />
               ))
             : rootCategories.map((cat) => (
-                <Link key={cat.id} to="/catalog" search={{ categoryId: cat.id, search: undefined, status: undefined, sortBy: undefined, page: undefined }}>
+                <Link key={cat.id} to="/catalog" search={{ categoryId: cat.id, search: undefined, status: undefined, sortBy: undefined, page: undefined, priceMin: undefined, priceMax: undefined }}>
                   <Card className="h-full transition-colors hover:bg-accent">
                     <CardContent className="flex flex-col items-center gap-2 p-4 text-center">
                       <span className="text-3xl">{cat.icon ?? '📦'}</span>
@@ -108,11 +79,14 @@ export function MarketplaceHomePage() {
         </div>
       </section>
 
+      {/* Recently viewed (Avito-style history) */}
+      <RecentlyViewedSection />
+
       {/* Featured / popular products */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Популярные товары</h2>
-          <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined }} className="text-sm text-primary hover:underline">
+          <Link to="/catalog" search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined, priceMin: undefined, priceMax: undefined }} className="text-sm text-primary hover:underline">
             Весь каталог →
           </Link>
         </div>
@@ -183,6 +157,69 @@ export function MarketplaceHomePage() {
         </Card>
       </section>
     </div>
+  )
+}
+
+/**
+ * «Вы недавно смотрели» — the latest browsed products (localStorage ids →
+ * product details). Hidden entirely until the visitor has any history.
+ */
+function RecentlyViewedSection() {
+  const { ids } = useRecentlyViewed()
+  const recentIds = ids.slice(0, 4)
+
+  const queries = useQueries({
+    queries: recentIds.map((id) => ({
+      queryKey: ['catalog', 'product', id],
+      queryFn: () => getProduct(id),
+      staleTime: 60_000,
+    })),
+  })
+  const products = queries.flatMap((q) => (q.data ? [q.data] : [])).slice(0, 4)
+  if (products.length === 0) return null
+
+  return (
+    <section className="mb-12">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">Вы недавно смотрели</h2>
+        <Link
+          to="/catalog"
+          search={{ categoryId: undefined, search: undefined, status: undefined, sortBy: undefined, page: undefined, priceMin: undefined, priceMax: undefined }}
+          className="text-sm text-primary hover:underline"
+        >
+          Смотреть больше →
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {products.map((product) => (
+          <Link key={product.id} to="/catalog/$productId" params={{ productId: product.id }}>
+            <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
+              <div className="aspect-[4/3] bg-muted">
+                {product.images[0] ? (
+                  <img
+                    src={product.images[0].url}
+                    alt={product.images[0].alt ?? product.title}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-muted-foreground">
+                    Нет фото
+                  </div>
+                )}
+              </div>
+              <CardContent className="p-3">
+                <h3 className="line-clamp-2 text-sm font-medium">{product.title}</h3>
+                <div className="mt-1 text-sm font-semibold text-foreground">
+                  {product.mainPrice
+                    ? formatPrice(product.mainPrice, product.currency)
+                    : 'Цена по запросу'}
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </section>
   )
 }
 
