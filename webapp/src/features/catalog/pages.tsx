@@ -1,5 +1,5 @@
 import type { ProductStatus } from '@prommarket/contracts'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-import { useCart, useFavorites } from '@/lib/use-local-collection'
+import { MarketplaceShell } from '@/components/marketplace/MarketplaceShell'
 import { ProductCard } from './components/ProductCard'
 import { ProductDetail } from './components/ProductDetail'
 import { SearchSuggest } from './components/SearchSuggest'
@@ -61,8 +61,6 @@ type CatalogSearch = {
 export function CatalogPage() {
   const navigate = useNavigate({ from: '/catalog' })
   const search = useSearch({ strict: false }) as CatalogSearch
-  const favorites = useFavorites()
-  const cart = useCart()
 
   const activeStatuses = useMemo<ProductStatus[]>(
     () => (search.status ? (search.status.split(',') as ProductStatus[]) : []),
@@ -105,33 +103,13 @@ export function CatalogPage() {
   }
 
   return (
-    <div className="min-h-svh bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">ПромМаркет</h1>
-            <p className="text-sm text-muted-foreground">B2B маркетплейс промышленного оборудования</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <a href="/">Главная</a>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/favorites">
-                Избранное{favorites.count > 0 ? ` · ${favorites.count}` : ''}
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/cart">Корзина{cart.count > 0 ? ` · ${cart.count}` : ''}</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <MarketplaceShell
+      className="bg-background"
+      searchDefaultValue={search.search ?? ''}
+    >
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[260px_1fr]">
         {/* Sidebar: categories + filters */}
-        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+        <aside className="space-y-6 lg:sticky lg:top-20 lg:self-start">
           <CategoryTree
             categories={categoriesQuery.data}
             loading={categoriesQuery.isLoading}
@@ -159,20 +137,27 @@ export function CatalogPage() {
           </FilterGroup>
         </aside>
 
-        {/* Main: search + sort + grid */}
+        {/* Main: count + sort + grid (search lives in the shell header,
+            with a compact fallback below md) */}
         <main className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex flex-col gap-3 md:hidden">
             <SearchSuggest
               key={search.search ?? ''}
               defaultValue={search.search ?? ''}
-              placeholder="Поиск по названию, SKU, бренду…"
-              className="sm:max-w-md"
+              placeholder="Поиск по каталогу…"
               onCommit={(q) => updateSearch({ search: q || undefined })}
             />
+          </div>
+          <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+            <span>
+              {productsResult.isLoading
+                ? 'Загрузка…'
+                : `Найдено: ${productsResult.data?.total ?? 0}`}
+            </span>
             <select
               value={search.sortBy ?? 'createdAt'}
               onChange={(e) => updateSearch({ sortBy: e.target.value })}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -180,14 +165,6 @@ export function CatalogPage() {
                 </option>
               ))}
             </select>
-          </div>
-
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              {productsResult.isLoading
-                ? 'Загрузка…'
-                : `Найдено: ${productsResult.data?.total ?? 0}`}
-            </span>
           </div>
 
           {productsResult.isLoading ? (
@@ -221,7 +198,7 @@ export function CatalogPage() {
           )}
         </main>
       </div>
-    </div>
+    </MarketplaceShell>
   )
 }
 

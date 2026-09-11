@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getProduct } from '@/features/catalog'
 import { PageContainer, PageHeader } from '@/components/PageLayout'
+import { MarketplaceShell } from '@/components/marketplace/MarketplaceShell'
 import { useCart, useCompare, useFavorites } from '@/lib/use-local-collection'
 
 /**
@@ -49,6 +50,7 @@ export function CartPage() {
   const products = productsQuery.data ?? []
 
   return (
+    <MarketplaceShell>
     <PageContainer>
       <PageHeader title="Корзина" description="Товары для формирования заявки (RFQ)." />
       {cart.count === 0 ? (
@@ -100,6 +102,7 @@ export function CartPage() {
         </div>
       )}
     </PageContainer>
+    </MarketplaceShell>
   )
 }
 
@@ -113,6 +116,7 @@ export function FavoritesPage() {
   const products = productsQuery.data ?? []
 
   return (
+    <MarketplaceShell>
     <PageContainer>
       <PageHeader title="Избранное" description="Сохранённые товары для отслеживания." />
       {favorites.count === 0 ? (
@@ -140,6 +144,7 @@ export function FavoritesPage() {
         </div>
       )}
     </PageContainer>
+    </MarketplaceShell>
   )
 }
 
@@ -154,10 +159,12 @@ export function ComparePage() {
 
   if (compare.count === 0) {
     return (
+      <MarketplaceShell>
       <PageContainer>
         <PageHeader title="Сравнение" description="Сравнивайте товары по характеристикам." />
         <EmptyState message="Добавьте товары к сравнению (до 4 одновременно)." />
       </PageContainer>
+      </MarketplaceShell>
     )
   }
 
@@ -173,6 +180,7 @@ export function ComparePage() {
   const attrNames = [...allAttrs.values()]
 
   return (
+    <MarketplaceShell>
     <PageContainer>
       <PageHeader title="Сравнение товаров" description="Сопоставление характеристик выбранных товаров." />
       <Card>
@@ -229,6 +237,7 @@ export function ComparePage() {
         </CardContent>
       </Card>
     </PageContainer>
+    </MarketplaceShell>
   )
 }
 

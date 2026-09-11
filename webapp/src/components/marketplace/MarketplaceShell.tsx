@@ -16,10 +16,12 @@ export function MarketplaceShell({
   children,
   className,
   showHeaderSearch = true,
+  searchDefaultValue = '',
 }: {
   children: React.ReactNode
   className?: string
   showHeaderSearch?: boolean
+  searchDefaultValue?: string
 }) {
   const favorites = useFavorites()
   const cart = useCart()
@@ -40,7 +42,11 @@ export function MarketplaceShell({
 
           {showHeaderSearch && (
             <div className="mx-2 hidden min-w-0 flex-1 md:block">
-              <SearchSuggest placeholder="Поиск оборудования, товаров, брендов…" />
+              <SearchSuggest
+                key={searchDefaultValue}
+                defaultValue={searchDefaultValue}
+                placeholder="Поиск оборудования, товаров, брендов…"
+              />
             </div>
           )}
           <div className={cn('flex flex-1 items-center justify-end gap-1', showHeaderSearch && 'md:flex-none')}>

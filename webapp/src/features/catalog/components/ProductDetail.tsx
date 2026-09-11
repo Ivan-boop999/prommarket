@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { MarketplaceShell } from '@/components/marketplace/MarketplaceShell'
 import { useCart, useCompare, useFavorites } from '@/lib/use-local-collection'
 import { useRecentlyViewed } from '@/lib/use-recently-viewed'
 
@@ -104,6 +105,7 @@ export function ProductDetail() {
 
   return (
     <>
+    <MarketplaceShell>
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <Link
         to="/catalog"
@@ -309,6 +311,7 @@ export function ProductDetail() {
       )}
     </div>
     <ProductReviews productId={product.id} />
+    </MarketplaceShell>
     </>
   )
 }
