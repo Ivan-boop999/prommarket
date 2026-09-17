@@ -36,7 +36,7 @@ export function MarketplaceShell({
             </span>
             <span className="hidden flex-col leading-none sm:flex">
               <span className="text-base font-bold tracking-tight">ПромМаркет</span>
-              <span className="text-[11px] text-muted-foreground">B2B маркетплейс</span>
+              <span className="text-[11px] text-muted-foreground">Маркетплейс оборудования</span>
             </span>
           </Link>
 
@@ -91,8 +91,8 @@ export function MarketplaceShell({
               <span className="text-base font-bold text-white">ПромМаркет</span>
             </div>
             <p className="text-sm leading-relaxed text-slate-400">
-              B2B-маркетплейс промышленного оборудования: надёжные поставщики,
-              проверенные товары, прямые сделки.
+              Маркетплейс промышленного оборудования: надёжные поставщики,
+              проверенные товары, прямые сделки — для бизнеса и частных лиц.
             </p>
           </div>
           <div>
@@ -126,7 +126,7 @@ export function MarketplaceShell({
         </div>
         <div className="border-t border-slate-800">
           <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-slate-500 sm:flex-row">
-            <span>© 2026 ПромМаркет · B2B маркетплейс промышленного оборудования</span>
+            <span>© 2026 ПромМаркет · маркетплейс промышленного оборудования</span>
             <span className="flex items-center gap-1">
               <HugeiconsIcon icon={Search01Icon} className="size-3.5" />
               Работает на движке ПромМаркет
